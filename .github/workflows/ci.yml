@@ -148,27 +148,31 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
-      - name: install pip-audit
+      - name: install pip-audit + tomli
         run: |
           python -m pip install --upgrade pip
-          pip install pip-audit
-      # WHY install everything into one venv: our deps don't pin
-      # versions ("fastapi>=0.111" not "==0.111.2"), so we audit the
-      # resolved environment rather than the spec. Doing it in one
-      # combined env catches transitive conflicts at the same time.
-      - name: install all packages
+          pip install pip-audit tomli
+      # WHY: install third-party deps directly from pyproject.toml
+      # without --editable our local packages. The previous strategy
+      # (`pip install -e backend[dev]` + `pip-audit --skip-editable`)
+      # tripped pip-audit's strict mode -- in some pip-audit versions,
+      # --skip-editable still errors on editable installs rather than
+      # silently skipping them. Extracting the deps directly is clean
+      # and audits exactly the supply-chain surface we ship.
+      - name: install resolved third-party deps
         run: |
-          pip install -e backend[dev] --quiet
-          pip install -e ml[dev] --quiet
-          pip install -e ml-service[dev] --quiet
-      - name: pip-audit (combined env)
-        # WHY --skip-editable: our three packages (waf-panel-backend,
-        # waf-ml, waf-ml-service) are installed editable for the audit
-        # job. They are not on PyPI and pip-audit's strict mode treats
-        # 'cannot resolve' as a failure. --skip-editable means 'audit
-        # the third-party tree only' which is exactly what we want for
-        # supply-chain risk: we don't ship our own packages to end users.
-        run: pip-audit --strict --skip-editable
+          python <<'EXTRACT'
+          import tomli
+          deps: list[str] = []
+          for f in ('backend/pyproject.toml', 'ml/pyproject.toml', 'ml-service/pyproject.toml'):
+              data = tomli.loads(open(f).read())
+              deps.extend(data['project']['dependencies'])
+          with open('/tmp/audit-deps.txt', 'w') as fh:
+              fh.write('\n'.join(deps))
+          EXTRACT
+          pip install -r /tmp/audit-deps.txt --quiet
+      - name: pip-audit
+        run: pip-audit --strict
 
   frontend:
     name: frontend (tsc + eslint + vitest + vite build)

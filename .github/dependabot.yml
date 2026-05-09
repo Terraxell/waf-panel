@@ -16,6 +16,11 @@ updates:
       day: "monday"
     open-pull-requests-limit: 3
     labels: ["deps", "backend"]
+    ignore:
+      # Skip major bumps -- they need human review for
+      # breaking changes. Patch + minor still flow through.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       patches:
         update-types: ["patch"]
@@ -27,6 +32,11 @@ updates:
       day: "monday"
     open-pull-requests-limit: 3
     labels: ["deps", "ml"]
+    ignore:
+      # Skip major bumps -- they need human review for
+      # breaking changes. Patch + minor still flow through.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       patches:
         update-types: ["patch"]
@@ -38,6 +48,11 @@ updates:
       day: "monday"
     open-pull-requests-limit: 3
     labels: ["deps", "ml-service"]
+    ignore:
+      # Skip major bumps -- they need human review for
+      # breaking changes. Patch + minor still flow through.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       patches:
         update-types: ["patch"]
@@ -49,6 +64,11 @@ updates:
       day: "monday"
     open-pull-requests-limit: 3
     labels: ["deps", "frontend"]
+    ignore:
+      # Skip major bumps -- they need human review for
+      # breaking changes. Patch + minor still flow through.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       patches:
         update-types: ["patch"]
@@ -62,3 +82,8 @@ updates:
       day: "monday"
     open-pull-requests-limit: 2
     labels: ["deps", "ci"]
+    ignore:
+      # Skip major bumps -- they need human review for
+      # breaking changes. Patch + minor still flow through.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
