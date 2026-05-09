@@ -158,6 +158,12 @@ export const en = {
   "drift.detail.feature": "Feature",
   "drift.detail.features_compared": "Features compared",
   "drift.detail.no_features": "No features in this report.",
+
+  // ── Dashboard live status (#122) ──────────────────────────────
+  "dashboard.live.live": "live",
+  "dashboard.live.connecting": "connecting…",
+  "dashboard.live.fallback": "polling",
+  "dashboard.live.title": "Live status: WebSocket pushes new metrics every 5 s when connected; falls back to 30 s polling otherwise.",
 } as const;
 
 // EnDict keeps the *key shape* as the contract — TS errors on a missing

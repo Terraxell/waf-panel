@@ -157,4 +157,10 @@ export const ru: EnDict = {
   "drift.detail.feature": "Фича",
   "drift.detail.features_compared": "Фичей сравнено",
   "drift.detail.no_features": "В этом отчёте нет фич.",
+
+  // ── Dashboard live status (#122) ──────────────────────────────
+  "dashboard.live.live": "онлайн",
+  "dashboard.live.connecting": "соединяюсь…",
+  "dashboard.live.fallback": "опрос",
+  "dashboard.live.title": "Статус live: WebSocket пушит метрики каждые 5 секунд при подключении; иначе откатывается на опрос раз в 30 секунд.",
 };

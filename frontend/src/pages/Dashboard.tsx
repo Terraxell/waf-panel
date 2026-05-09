@@ -5,6 +5,7 @@ import {
 import { Card } from "@/components/ui/Card";
 import { api } from "@/lib/api";
 import { useT } from "@/lib/i18n";
+import { useLiveDashboard } from "@/lib/useLiveDashboard";
 import "./Dashboard.css";
 
 function formatBucket(iso: string): string {
@@ -16,6 +17,11 @@ function formatBucket(iso: string): string {
 export function Dashboard() {
   const t = useT();
   const me = useQuery({ queryKey: ["me"], queryFn: () => api.me() });
+
+  // ADR-0015: prefer the WS-pushed overview when the socket is up; the
+  // REST query stays as a fall-open so the cards never go blank if the
+  // WS handshake fails (e.g. nginx WS upgrade misconfigured).
+  const live = useLiveDashboard();
   const overview = useQuery({
     queryKey: ["metrics", "overview"],
     queryFn: () => api.metricsOverview(),
@@ -28,20 +34,43 @@ export function Dashboard() {
   });
   const rules = useQuery({ queryKey: ["rules"], queryFn: () => api.listRules() });
 
-  const ovr = overview.data;
+  // Pick the freshest source for the cards: WS data wins when a frame
+  // arrived in the last 60 s; otherwise the polled REST snapshot.
+  const liveFresh =
+    live.data !== null
+    && live.lastSeenAt !== null
+    && Date.now() - live.lastSeenAt < 60_000;
+  const ovr = liveFresh ? live.data : overview.data;
+
   const chartData =
     series.data?.map((b) => ({ x: formatBucket(b.bucket), rps: b.rps, blocked: b.blocked })) ?? [];
 
-  // Locale-aware number formatting — uses the browser's BCP47 default,
-  // which respects the OS / browser language setting; we don't try to
-  // override it from the i18n state because operators usually expect
-  // their OS thousand-separator regardless of UI language.
   const numFmt = (n: number) => n.toLocaleString();
+
+  // Status pill content + class. The four states map to UX colours via
+  // CSS in Dashboard.css: live = green, connecting = amber, closed/
+  // error = grey "fallback to polling".
+  const liveClass = `dashboard__live dashboard__live--${live.status}`;
+  const liveLabel = liveFresh
+    ? t("dashboard.live.live")
+    : live.status === "connecting"
+      ? t("dashboard.live.connecting")
+      : t("dashboard.live.fallback");
 
   return (
     <div className="dashboard stack">
       <header className="dashboard__head">
-        <span className="mono-label">{t("dashboard.kicker")}</span>
+        <div className="row" style={{ alignItems: "center", gap: "0.75rem" }}>
+          <span className="mono-label">{t("dashboard.kicker")}</span>
+          <span
+            className={liveClass}
+            aria-live="polite"
+            title={t("dashboard.live.title")}
+          >
+            <span className="dashboard__live-dot" aria-hidden />
+            {liveLabel}
+          </span>
+        </div>
         <h1>{t("dashboard.title")}</h1>
         <p className="dashboard__hint">{t("dashboard.hint")}</p>
       </header>

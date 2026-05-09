@@ -157,4 +157,10 @@ export const fr: EnDict = {
   "drift.detail.feature": "Feature",
   "drift.detail.features_compared": "Features comparées",
   "drift.detail.no_features": "Aucune feature dans ce rapport.",
+
+  // ── Dashboard live status (#122) ──────────────────────────────
+  "dashboard.live.live": "en direct",
+  "dashboard.live.connecting": "connexion…",
+  "dashboard.live.fallback": "polling",
+  "dashboard.live.title": "Statut live : WebSocket pousse les métriques toutes les 5 s ; sinon polling à 30 s.",
 };
