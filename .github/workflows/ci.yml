@@ -25,7 +25,7 @@ env:
 
 jobs:
   backend:
-    name: backend (pytest + ruff)
+    name: backend (pytest + ruff + mypy)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     services:
@@ -59,6 +59,12 @@ jobs:
           pip install ruff
       - name: ruff
         run: ruff check backend/src backend/tests
+      - name: mypy
+        # WHY working-directory: pyproject.toml [tool.mypy] sets
+        # files = ["src/waf_panel"] relative to the backend package, so
+        # mypy must run from there to pick up the config + the right paths.
+        working-directory: backend
+        run: python -m mypy
       - name: pytest
         working-directory: backend
         run: PYTHONPATH=src python -m pytest -q

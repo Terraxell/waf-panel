@@ -143,21 +143,25 @@ async def run_drift_check(
     warn = sum(1 for d in drifts if d.level == "warn")
     status = "alert" if alert > 0 else ("warn" if warn > 0 else "clean")
 
-    payload = {
+    # WHY explicit feature_rows: keeps the list[dict[str, Any]] shape
+    # visible to mypy so payload["features"] downstream is iterable
+    # without a cast.
+    feature_rows: list[dict[str, Any]] = [
+        {
+            "feature": d.feature,
+            "psi": d.psi,
+            "ks_pvalue": d.ks_pvalue,
+            "level": d.level,
+        }
+        for d in drifts
+    ]
+    payload: dict[str, Any] = {
         "status": status,
         "alert_count": alert,
         "warn_count": warn,
         "n_rows_checked": n_rows,
         "n_features_compared": len(drifts),
-        "features": [
-            {
-                "feature": d.feature,
-                "psi": d.psi,
-                "ks_pvalue": d.ks_pvalue,
-                "level": d.level,
-            }
-            for d in drifts
-        ],
+        "features": feature_rows,
     }
 
     report_path: Path | None = None
@@ -171,7 +175,7 @@ async def run_drift_check(
         # WHY: audit payload trims feature list to the alert-level subset,
         #      so an alert row stays readable even when 25 columns are scored.
         alert_feats = [
-            f for f in payload["features"] if f["level"] in {"alert", "warn"}
+            f for f in feature_rows if f["level"] in {"alert", "warn"}
         ][:10]
         await audit_repo.record(
             actor_id=actor_id,
@@ -179,7 +183,7 @@ async def run_drift_check(
             target="ml_drift",
             payload={
                 **payload,
-                "features": alert_feats or payload["features"][:5],
+                "features": alert_feats or feature_rows[:5],
                 "report_path": str(report_path) if report_path else None,
             },
         )
@@ -204,12 +208,17 @@ async def _run_from_cli(
     *, active_model_dir: Path, window_hours: int,
     pull_limit: int, report_dir: Path | None,
 ) -> int:
-    from ..clickhouse_client import get_clickhouse_client
+    from ..clickhouse_client import get_clickhouse
     from ..db.session import get_session
     from ..repositories.deps import get_audit_repo
 
-    ch = get_clickhouse_client()
+    ch = get_clickhouse()
     async for s in get_session():
+        # WHY assert: get_session yields None only in test (in-memory)
+        # mode. The CLI never runs in that mode, so an in-memory yield
+        # here would be a setup bug -- fail loudly instead of crashing
+        # on the .commit() three lines down.
+        assert s is not None, "drift_worker CLI requires a real DB session"
         audit = await get_audit_repo(s)
         res = await run_drift_check(
             ch_client=ch, audit_repo=audit,
