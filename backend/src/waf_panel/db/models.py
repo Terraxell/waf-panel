@@ -185,3 +185,33 @@ class MlConfig(Base):
 
 
 __all__ = ["AuditLog", "Incident", "MLModel", "MlConfig", "Rule", "User"]
+
+
+class RefreshTokenFamily(Base):
+    """ADR-0015: one row per active refresh-token session.
+
+    Generation counter detects replay: a refresh JWT carries
+    ``family_id`` + ``generation`` claims; the server bumps generation
+    on rotation. Presenting an older generation means the token was
+    reused / stolen → revoke the family by setting ``revoked_at``.
+    """
+    __tablename__ = "refresh_token_families"
+
+    id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    user_id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    generation: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("0")
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+    last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
