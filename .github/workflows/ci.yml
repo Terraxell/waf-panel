@@ -200,6 +200,30 @@ jobs:
       - name: vite build
         run: npm run build
 
+  a11y:
+    # WHY a separate advisory job: jsx-a11y rules can surface dozens
+    # of warnings the first time on a UI that grew without a11y in
+    # mind; we don't want that to gate merges. continue-on-error keeps
+    # it informational. Drop the flag once the codebase is clean.
+    name: a11y (jsx-a11y + vitest-axe)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: install
+        run: npm install --include=optional
+      - name: lint:a11y (static jsx-a11y)
+        run: npm run lint:a11y
+      - name: test:a11y (vitest-axe runtime)
+        run: npm run test:a11y
+
   # WHY: a single aggregator the branch-protection rule can pin against;
   # adding a new job later doesn't require touching protection settings.
   ci-ok:
