@@ -131,6 +131,12 @@ export interface MlExplainResponse {
   fallback_reason: MlFallbackReason | null;
 }
 
+// ── ML block-mode threshold ───────────────────────────────────────
+export interface MlThresholdResponse {
+  value: number;
+  description?: string;
+}
+
 // ── Drift reports (C-list 18c, fronted by /api/v1/drift) ─────────
 export type DriftLevel = "alert" | "warn" | "clean" | "ok";
 
