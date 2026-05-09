@@ -3,6 +3,7 @@
 [![ci](https://github.com/Terraxell/waf-panel/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Terraxell/waf-panel/actions/workflows/ci.yml)
 [![release](https://img.shields.io/badge/release-v1.0.0-2A4DB8)](./CHANGELOG.md)
 [![tests](https://img.shields.io/badge/tests-163%20passing-2A4DB8)](./CHANGELOG.md)
+[![deploy](https://img.shields.io/badge/deploy-fly.io-7B3FE4)](./docs/deploy.md)
 
 Web Application Firewall management dashboard with an ML-based anomaly
 detector. Course project at IEML, "Internet Programming" discipline
@@ -109,6 +110,11 @@ API or psql before any non-dev usage. The backend refuses to start
 when `WAF_ENV=production` and the admin password is still `admin` —
 mirrors the same guard on `JWT_SECRET`. See `docs/runbook.md` section
 8 for the rotation snippet.
+
+For a public HTTPS demo on the Fly.io free tier (5 minutes, $0/mo),
+see [`docs/deploy.md`](docs/deploy.md). It builds a single container
+(nginx + uvicorn) and attaches a managed Fly Postgres. ml-service /
+ClickHouse / Vector are intentionally omitted to fit the free tier.
 
 ### Verify the protective layer
 

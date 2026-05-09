@@ -1,0 +1,76 @@
+# Single-container image for Fly.io / Render / Railway demo deploys.
+#
+# WHY one container: free-tier hosts charge per machine and the panel
+# is a two-process system at minimum (nginx for static SPA + uvicorn
+# for the API). Bundling them keeps the demo on the cheapest plan.
+#
+# What's NOT in this image:
+#   * ml-service  -- the backend proxy fail-opens, the panel still works.
+#   * ClickHouse  -- dashboards render with empty time-series.
+#   * Vector / nginx+ModSecurity / DVWA -- not needed for the panel demo.
+#
+# What IS in this image:
+#   * Python venv with the FastAPI gateway.
+#   * Built React SPA (dist/) served by nginx.
+#   * Fly Postgres attached at runtime via DATABASE_URL.
+
+# ── 1. Build the frontend ─────────────────────────────────────────────
+FROM node:20-alpine AS frontend-builder
+
+WORKDIR /app/frontend
+COPY frontend/package.json ./
+RUN npm install --no-audit --no-fund --include=optional
+
+COPY frontend/ ./
+RUN npm run build
+
+# ── 2. Build the backend Python venv ──────────────────────────────────
+FROM python:3.11-slim AS backend-builder
+
+ENV PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PATH=/opt/venv/bin:$PATH
+
+RUN python -m venv /opt/venv \
+ && /opt/venv/bin/pip install --upgrade pip
+
+WORKDIR /app/backend
+COPY backend/pyproject.toml ./
+COPY backend/src/ ./src/
+RUN pip install .
+
+# ── 3. Runtime: nginx (static) + uvicorn (API), driven by start.sh ───
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH=/opt/venv/bin:$PATH \
+    PYTHONPATH=/app/backend/src \
+    PORT=8080
+
+# WHY apt install nginx in the runtime stage: alpine vs slim trade-off.
+# python:3.11-slim is debian-based; nginx is the standard package and
+# has predictable behaviour with Fly's network shaping.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends nginx \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
+
+# Backend
+COPY --from=backend-builder /opt/venv /opt/venv
+WORKDIR /app/backend
+COPY backend/src/ ./src/
+COPY backend/alembic/ ./alembic/
+COPY backend/alembic.ini ./alembic.ini
+
+# Frontend dist + nginx config
+COPY --from=frontend-builder /app/frontend/dist /usr/share/nginx/html
+COPY infra/deploy/nginx.fly.conf /etc/nginx/conf.d/default.conf
+
+# Start script: alembic upgrade → uvicorn (background) → nginx (foreground).
+COPY infra/deploy/start.sh /start.sh
+RUN chmod +x /start.sh
+
+EXPOSE 8080
+CMD ["/start.sh"]

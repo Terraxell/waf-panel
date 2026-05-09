@@ -1,0 +1,48 @@
+# Fly.io app config — task #126 demo deploy.
+#
+# WHY this file: lets a one-line `fly deploy` reproduce the demo
+# environment. Also doubles as documentation of what the production
+# values should look like for any other PaaS.
+#
+# Real value substitutions an operator must make before deploy:
+#   * <YOUR-APP>      -- pick a name, e.g. "waf-panel-demo".
+#   * primary_region  -- pick the closest region (`fly platform regions`).
+#   * JWT_SECRET      -- `fly secrets set JWT_SECRET=$(openssl rand -hex 32)`.
+#   * Postgres        -- `fly postgres create` then `fly postgres attach`.
+
+app = "<YOUR-APP>"
+primary_region = "fra"
+
+[build]
+  dockerfile = "../../infra/deploy/Dockerfile.fly"
+  # WHY context up two levels: the Dockerfile copies from frontend/ and
+  # backend/ which sit at the repo root, not under infra/deploy/.
+
+[env]
+  WAF_ENV = "production"
+  PORT = "8080"
+  # Cookie + CSRF (ADR-0014) -- defaults are fine for demo.
+  COOKIE_SESSION_NAME = "waf_session"
+  COOKIE_CSRF_NAME = "waf_csrf"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+[[http_service.checks]]
+  interval = "30s"
+  timeout = "5s"
+  grace_period = "10s"
+  method = "GET"
+  path = "/__health"
+
+[[vm]]
+  # Free-tier shape: shared CPU, 256 MB RAM. Enough for the panel
+  # without ml-service / ClickHouse. Bump to 512 MB if traffic grows.
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 256
