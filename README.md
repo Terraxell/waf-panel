@@ -31,7 +31,7 @@ calibration, opt-in block-mode via Lua subrequest
 harness with 200 labelled probes, an opt-in AWS WAF IPSet adapter,
 the drift worker on a schedule, and a UI in RU / EN / DE / FR.
 
-Full history: `CHANGELOG.md`.
+Full history: `CHANGELOG.md`. Architecture deep-dive: [`docs/ARTICLE.md`](docs/ARTICLE.md).
 
 | Layer        | What is in                                                                |
 |--------------|---------------------------------------------------------------------------|
