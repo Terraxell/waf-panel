@@ -15,6 +15,7 @@ import type {
   ApiError, AuditEntry, CsrfOut, CurrentUser, IncidentFilters, IncidentRow,
   MetricsOverview, MlExplainResponse, MlInspectRequest, MlInspectResponse,
   MlThresholdResponse, RuleCreate, RuleOut, TimeBucket, TokenOut,
+  DriftReportFull, DriftReportSummary,
 } from "./types";
 
 const BASE = "/api/v1";
@@ -127,6 +128,11 @@ export const api = {
 
   listAudit: (limit = 100, action_prefix?: string) =>
     request<AuditEntry[]>(`/audit${qs({ limit, action_prefix })}`),
+  // ── Drift reports ──────────────────────────────────────────────────
+  listDriftReports: () => request<DriftReportSummary[]>("/drift"),
+  getDriftReport: (name: string) =>
+    request<DriftReportFull>(`/drift/${encodeURIComponent(name)}`),
+
 
   mlInspect: (req: MlInspectRequest) =>
     request<MlInspectResponse>("/ml/inspect", {

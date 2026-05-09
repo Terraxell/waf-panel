@@ -139,6 +139,25 @@ export const en = {
   "audit.search_label": "SEARCH",
   "audit.search_placeholder": "by target / payload",
   "audit.load_more": "Load more",
+
+  // ── Drift reports ──────────────────────────────────────────────
+  "nav.drift": "Drift",
+  "drift.kicker": "drift detection",
+  "drift.title": "Drift reports",
+  "drift.hint": "Per-feature PSI + KS verdicts written by the drift worker. Click a row for the full per-column breakdown.",
+  "drift.empty": "No drift reports yet. Run `make drift-check` (or wait for the scheduled worker) to generate one.",
+  "drift.error": "Failed to load drift reports.",
+  "drift.col.report": "Report",
+  "drift.col.generated": "Generated",
+  "drift.col.status": "Status",
+  "drift.col.alerts": "Alerts",
+  "drift.col.warns": "Warns",
+  "drift.col.rows": "Rows checked",
+  "drift.detail.close": "Close",
+  "drift.detail.error": "Failed to load report.",
+  "drift.detail.feature": "Feature",
+  "drift.detail.features_compared": "Features compared",
+  "drift.detail.no_features": "No features in this report.",
 } as const;
 
 // EnDict keeps the *key shape* as the contract — TS errors on a missing

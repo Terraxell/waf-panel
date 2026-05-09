@@ -138,4 +138,23 @@ export const fr: EnDict = {
   "audit.search_label": "RECHERCHE",
   "audit.search_placeholder": "par target / payload",
   "audit.load_more": "Charger plus",
+
+  // ── Drift reports ──────────────────────────────────────────────
+  "nav.drift": "Dérive",
+  "drift.kicker": "détection de dérive",
+  "drift.title": "Rapports de dérive",
+  "drift.hint": "Verdicts PSI + KS par feature écrits par le worker. Cliquez une ligne pour le détail par colonne.",
+  "drift.empty": "Aucun rapport de dérive pour l'instant. Lancez `make drift-check` pour en générer un.",
+  "drift.error": "Échec du chargement des rapports de dérive.",
+  "drift.col.report": "Rapport",
+  "drift.col.generated": "Généré",
+  "drift.col.status": "Statut",
+  "drift.col.alerts": "Alertes",
+  "drift.col.warns": "Avertiss.",
+  "drift.col.rows": "Lignes vérifiées",
+  "drift.detail.close": "Fermer",
+  "drift.detail.error": "Échec du chargement du rapport.",
+  "drift.detail.feature": "Feature",
+  "drift.detail.features_compared": "Features comparées",
+  "drift.detail.no_features": "Aucune feature dans ce rapport.",
 };
