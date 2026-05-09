@@ -20,9 +20,29 @@ class LoginIn(BaseModel):
 
 
 class TokenOut(BaseModel):
+    """Response from POST /auth/login.
+
+    The browser SPA does not need ``access_token``: the server already
+    set the httpOnly session cookie. ``access_token`` is kept here for
+    CLI / CI clients that send ``Authorization: Bearer ...``.
+
+    ``csrf_token`` is the value the SPA must echo in ``X-CSRF-Token``
+    on every mutating request. It also lives in the JS-readable
+    ``waf_csrf`` cookie, but returning it in the JSON saves the SPA a
+    ``document.cookie`` parse on first paint.
+    """
     access_token: str
     token_type: Literal["bearer"] = "bearer"
     expires_in: int  # seconds
+    csrf_token: str
+
+
+class CsrfOut(BaseModel):
+    """Response from GET /auth/csrf — used after a hard refresh that
+    didn't go through /auth/login. The SPA hits this once at boot to
+    populate its in-memory CSRF token from the cookie pair.
+    """
+    csrf_token: str
 
 
 class CurrentUser(BaseModel):

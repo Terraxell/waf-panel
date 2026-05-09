@@ -16,12 +16,11 @@ from .api import ml as ml_api
 from .api import rules as rules_api
 from .clickhouse_client import dispose_clickhouse
 from .config import Settings, get_settings
+from .security_csrf import CsrfMiddleware
 from .security_headers import SecurityHeadersMiddleware
 
-# WHY (fix): refuse to start in production with a default
-# JWT secret. This is exactly the kind of "you forgot to rotate it"
-# incident that turns a 2-line .env mistake into a JWT-replay disaster.
-# Dev / test stays untouched — the default secret is fine there.
+# Refuse to start in production with a default JWT secret. Dev / test
+# stays untouched — the default secret is fine there.
 DEFAULT_JWT_SECRETS = frozenset({
     "dev-secret-do-not-use",
     "change_me_in_a_real_deployment",
@@ -30,12 +29,7 @@ DEFAULT_JWT_SECRETS = frozenset({
 
 
 def _validate_settings(settings: Settings) -> None:
-    """Hard-fail on startup when production config is unsafe.
-
-    SAFETY: only runs when ``waf_env == "production"`` so dev / CI keeps
-    working without ceremony. The exception message says exactly which
-    env-var to set, so operators don't have to read source.
-    """
+    """Hard-fail on startup when production config is unsafe."""
     if settings.waf_env.lower() != "production":
         return
     if settings.jwt_secret in DEFAULT_JWT_SECRETS:
@@ -47,7 +41,7 @@ def _validate_settings(settings: Settings) -> None:
     if len(settings.jwt_secret) < 32:
         raise RuntimeError(
             "WAF_ENV=production but JWT_SECRET is < 32 chars. "
-            "Use at least 32 hex chars (openssl rand -hex 32).",
+            "Use at least 32 hex chars (openssl rand -hex 32)."
         )
 
 
@@ -69,8 +63,15 @@ def create_app() -> FastAPI:
         redoc_url="/api/redoc",
         lifespan=_lifespan,
     )
-    # WHY : security headers BEFORE CORS so the headers
-    # are emitted on every response, including preflight rejections.
+    # Middleware stack — Starlette runs these inside-out: the LAST one
+    # added runs FIRST on the request, LAST on the response.
+    #
+    # Order (request flow, top-to-bottom):
+    #   1. SecurityHeaders — adds CSP/HSTS/XFO to every response.
+    #   2. CORS            — preflight handling.
+    #   3. CSRF            — checks X-CSRF-Token vs cookie for mutating
+    #                         requests. Skipped for safe methods, login,
+    #                         logout, and Bearer-auth calls.
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(
         CORSMiddleware,
@@ -79,6 +80,9 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    # ADR-0014: double-submit CSRF for cookie-authenticated mutating
+    # requests. Bearer-auth flows (CLI/CI) bypass — see middleware code.
+    app.add_middleware(CsrfMiddleware)
 
     app.include_router(health_api.router)
     app.include_router(auth_api.router, prefix="/api/v1")
