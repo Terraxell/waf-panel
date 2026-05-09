@@ -6,7 +6,7 @@
 // cover both the happy editor path and the read-only-for-non-admin path.
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -64,18 +64,14 @@ describe("<MlThresholdSlider>", () => {
     render(wrap(<MlThresholdSlider user={ADMIN} />));
     const slider = (await screen.findByRole("slider")) as HTMLInputElement;
 
-    // Move the slider — onChange fires once per fireEvent.change.
-    const user = userEvent.setup();
-    await user.click(slider);
-    // Use fireEvent through the input value setter — userEvent doesn't
-    // expose a direct way to set a range value smoothly across browsers.
-    slider.value = "0.5";
-    slider.dispatchEvent(new Event("input", { bubbles: true }));
-    slider.dispatchEvent(new Event("change", { bubbles: true }));
+    // Move the slider — fireEvent.change goes through React's synthetic
+    // event system; userEvent.type / direct .value assignment don't
+    // reliably propagate to the controlled input's onChange in jsdom.
+    fireEvent.change(slider, { target: { value: "0.5" } });
 
     const apply = await screen.findByRole("button", { name: /apply/i });
     await waitFor(() => expect(apply).not.toBeDisabled());
-    await user.click(apply);
+    await userEvent.setup().click(apply);
 
     await waitFor(() => {
       expect(api.mlThresholdPut).toHaveBeenCalledWith(0.5);
