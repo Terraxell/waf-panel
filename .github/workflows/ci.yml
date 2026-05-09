@@ -224,6 +224,60 @@ jobs:
       - name: test:a11y (vitest-axe runtime)
         run: npm run test:a11y
 
+  e2e:
+    # WHY a separate advisory job: Playwright + chromium adds ~250 MB
+    # to the install step and another ~3 minutes to wall-clock time;
+    # we don't want it on the critical path of every push. The job
+    # also depends on docker compose actually booting healthy
+    # containers, which is a different failure surface than the
+    # unit-test jobs. continue-on-error keeps it informational
+    # until the docker-compose-in-CI pattern stabilises.
+    name: e2e (playwright smoke)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: env
+        # WHY .env: docker-compose.yml expects the file. Defaults are fine
+        # for the e2e demo; we only need a session cookie + admin login.
+        run: cp .env.example .env
+      - name: bring up the minimal stack
+        # WHY only postgres + backend + frontend: ml-service / clickhouse
+        # / vector / dvwa add ~5 minutes of wall time and aren't on the
+        # critical path of the smoke test. ClickHouse-shaped pages render
+        # empty placeholders, which the test tolerates.
+        run: |
+          docker compose up -d --build postgres backend frontend
+          # Wait for the health gates on the three containers.
+          for _ in $(seq 1 60); do
+            if curl -fs http://localhost:3000/ >/dev/null 2>&1; then
+              echo "frontend ready"; break
+            fi
+            sleep 2
+          done
+      - name: bootstrap (migrations + admin seed)
+        run: docker compose exec -T backend alembic upgrade head
+      - name: install playwright
+        working-directory: e2e
+        run: |
+          npm install
+          npx playwright install --with-deps chromium
+      - name: run smoke
+        working-directory: e2e
+        env:
+          CI: "true"
+          E2E_PANEL_URL: http://localhost:3000
+        run: npm test
+      - name: dump logs on failure
+        if: failure()
+        run: |
+          docker compose logs backend frontend postgres
+          ls -la e2e/test-results || true
+
   # WHY: a single aggregator the branch-protection rule can pin against;
   # adding a new job later doesn't require touching protection settings.
   ci-ok:
