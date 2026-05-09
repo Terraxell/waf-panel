@@ -1,0 +1,64 @@
+# Dependabot — auto-PR weekly for vulnerable / outdated deps.
+#
+# WHY: this repo has 5 ecosystems (backend pip, ml pip, ml-service pip,
+# frontend npm, GitHub Actions). A CVE in any of them is a real risk; a
+# weekly PR sweep keeps the upgrade hygiene visible without manual nag.
+#
+# Open-PR limit kept low (3 per ecosystem) so the inbox doesn't drown.
+# Reviewer is set so the GitHub UI assigns automatically.
+
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels: ["deps", "backend"]
+    groups:
+      patches:
+        update-types: ["patch"]
+
+  - package-ecosystem: "pip"
+    directory: "/ml"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels: ["deps", "ml"]
+    groups:
+      patches:
+        update-types: ["patch"]
+
+  - package-ecosystem: "pip"
+    directory: "/ml-service"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels: ["deps", "ml-service"]
+    groups:
+      patches:
+        update-types: ["patch"]
+
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels: ["deps", "frontend"]
+    groups:
+      patches:
+        update-types: ["patch"]
+      types:
+        patterns: ["@types/*"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 2
+    labels: ["deps", "ci"]

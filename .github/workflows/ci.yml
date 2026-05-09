@@ -132,6 +132,38 @@ jobs:
       - name: pytest
         run: python -m pytest -q bench/tests/
 
+  audit:
+    # WHY a separate job (not a step in each existing one): pip-audit
+    # talks to the OSV / PyPI advisory database and we don't want a
+    # transient network blip on those endpoints to fail the unit-test
+    # job. continue-on-error keeps the check informational for now;
+    # remove the flag once the dep tree has been triaged.
+    name: audit (pip-audit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: install pip-audit
+        run: |
+          python -m pip install --upgrade pip
+          pip install pip-audit
+      # WHY install everything into one venv: our deps don't pin
+      # versions ("fastapi>=0.111" not "==0.111.2"), so we audit the
+      # resolved environment rather than the spec. Doing it in one
+      # combined env catches transitive conflicts at the same time.
+      - name: install all packages
+        run: |
+          pip install -e backend[dev] --quiet
+          pip install -e ml[dev] --quiet
+          pip install -e ml-service[dev] --quiet
+      - name: pip-audit (combined env)
+        run: pip-audit --strict --disable-pip
+
   frontend:
     name: frontend (tsc + eslint + vitest + vite build)
     runs-on: ubuntu-latest
@@ -162,7 +194,7 @@ jobs:
   # adding a new job later doesn't require touching protection settings.
   ci-ok:
     name: ci-ok
-    needs: [backend, ml, ml-service, bench, frontend]
+    needs: [backend, ml, ml-service, bench, frontend, audit]
     runs-on: ubuntu-latest
     if: always()
     steps:
