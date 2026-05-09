@@ -1,4 +1,4 @@
-"""Drift-report API — Sprint 13 (audit C-list item 18c)."""
+"""Drift-report API — (audit C-list item 18c)."""
 
 from __future__ import annotations
 

@@ -1,5 +1,5 @@
 // Hand-written API types — mirror the FastAPI Pydantic schemas.
-// WHY: ADR-0004 plans autogen from OpenAPI in Sprint 7+.
+// WHY: ADR-0004 plans autogen from OpenAPI in future release.
 
 export type RuleSource = "crs" | "custom" | "ml";
 export type RuleAction = "block" | "log" | "challenge";
@@ -77,7 +77,7 @@ export interface AuditEntry {
 
 export interface ApiError { status: number; message: string; }
 
-// ── ML proxy (Sprint 8 + 9) ─────────────────────────────────────────────
+// ── ML proxy ( + 9) ─────────────────────────────────────────────
 // WHY: matches the backend InspectResponse / ExplainResponse shapes —
 //      nullable prob + fallback flag so the UI can render "—" cleanly.
 
@@ -124,7 +124,7 @@ export interface MlExplainResponse {
   fallback_reason: MlFallbackReason | null;
 }
 
-// ── ML block-mode threshold (Sprint 10) ────────────────────────────────
+// ── ML block-mode threshold  ────────────────────────────────
 export interface MlThresholdResponse {
   value: number;
   description?: string;

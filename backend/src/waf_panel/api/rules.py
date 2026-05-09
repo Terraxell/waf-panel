@@ -4,6 +4,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, Field
 
 from ..repositories.deps import AuditRepoDep, RulesRepoDep
 from ..schemas import CurrentUser, RuleCreate, RuleOut, RuleUpdate
@@ -79,9 +80,7 @@ async def delete_rule(
         raise HTTPException(status.HTTP_404_NOT_FOUND, "rule not found") from exc
 
 
-# ── Bulk import (Sprint 13, audit C-list item 18a) ──────────────────────
-
-from pydantic import BaseModel, Field
+# ── Bulk import (audit C-list item 18a) ──────────────────────
 
 
 class BulkImportRequest(BaseModel):

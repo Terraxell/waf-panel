@@ -120,7 +120,7 @@ def test_score_cache_hit_marks_cached(stub_state, client):
 
 
 def test_iforest_decision_function_does_not_collapse_on_batch_1():
-    """Sprint 11 hotfix regression: IsolationForest-shaped estimator with
+    """fix regression: IsolationForest-shaped estimator with
     only `decision_function` must give a non-trivial probability on a
     single-row input. The previous per-batch min/max normalisation
     collapsed to 0 here.

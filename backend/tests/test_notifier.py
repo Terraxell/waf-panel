@@ -1,4 +1,4 @@
-"""Notification webhook adapter — Sprint 13."""
+"""Notification webhook adapter ."""
 
 from __future__ import annotations
 

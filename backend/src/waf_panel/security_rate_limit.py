@@ -1,4 +1,4 @@
-"""In-process sliding-window rate limiter — Sprint 11 hotfix.
+"""In-process sliding-window rate limiter — fix.
 
 WHY: the audit caught that ``POST /api/v1/auth/login`` had no rate limit.
 Brute-force is the first thing a serious reviewer flags. We add a small

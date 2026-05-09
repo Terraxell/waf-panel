@@ -22,7 +22,7 @@ class Settings:
     use_registry: bool = os.environ.get("ML_USE_REGISTRY", "false").lower() == "true"
     postgres_dsn: str | None = os.environ.get("ML_POSTGRES_DSN")
 
-    # Sprint 13 (audit C13): TreeSHAP per-request explainer for tree
+    # (audit C13): TreeSHAP per-request explainer for tree
     # models. Off by default — `shap` is a heavy import and TreeExplainer
     # adds ~1.5–3 ms per call. Operators opt in by setting
     # ``ML_USE_SHAP=true``; the existing weights × value path remains the

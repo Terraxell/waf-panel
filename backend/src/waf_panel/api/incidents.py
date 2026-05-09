@@ -1,6 +1,6 @@
 """Incidents endpoint — read-side over ClickHouse `traffic_log`.
 
-Sprint-5 scope: filtered listing only. Sprint 9 adds incident-detail
+scope: filtered listing only. Adds: incident-detail
 view with full payload, ML-score breakdown, and per-incident actions.
 """
 

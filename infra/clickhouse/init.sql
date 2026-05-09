@@ -1,6 +1,6 @@
 -- waf-panel — ClickHouse bootstrap.
 -- WHY: docker-entrypoint runs *.sql once on first boot. Anything that
---      changes later belongs in a numbered migration, but Sprint 6's
+--      changes later belongs in a numbered migration, but 's
 --      schema is small enough to keep here as IF NOT EXISTS.
 
 CREATE DATABASE IF NOT EXISTS waf_logs;
@@ -44,7 +44,7 @@ ENGINE = MergeTree
 PARTITION BY toYYYYMMDD(ts)
 ORDER BY (ts, request_id);
 
--- ── Materialized views (Sprint 6) ───────────────────────────────────
+-- ── Materialized views  ───────────────────────────────────
 -- WHY: dashboard polls every 30 s; pre-aggregating on INSERT keeps reads
 --      fast as the log volume grows. See ADR-0006.
 

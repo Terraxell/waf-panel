@@ -1,4 +1,4 @@
-"""Login rate-limit — Sprint 11 hotfix.
+"""Login rate-limit — fix.
 
 Behaviour:
   * 5 attempts per (ip, email) per 60 s succeed (or 401 on bad creds).
@@ -34,7 +34,7 @@ def test_correct_login_succeeds_within_window(client):
 
 def test_sixth_attempt_returns_429(client):
     """SAFETY: brute-force gating fires regardless of credentials — even
-    a valid user's 6th attempt within 60s is throttled. Sprint 12 may
+    a valid user's 6th attempt within 60s is throttled.  may
     reset on success; for now the simpler always-throttle is correct."""
     # Wrong password 5 times → all 401, but bucket fills up.
     for i in range(5):

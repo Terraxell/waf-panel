@@ -42,7 +42,7 @@ ground truth the model was trained on.
 ### Out-of-band, not on the request path
 
 The detector is a CLI: `python -m waf_ml.drift --baseline X.csv
---current Y.csv --report drift.json`. Sprint 11 will run it on a
+--current Y.csv --report drift.json`.  will run it on a
 schedule (Redis Streams worker, `cron`, whatever — out of scope
 for this ADR). Doing drift on the request path is unnecessary and
 slow.
@@ -56,7 +56,7 @@ Positive:
 
 Negative:
 - Baseline pinned to training means rebaseline is a manual step
-  (Sprint 11 adds an operator UI).
+  (Adds: an operator UI).
 - KS is sensitive to large samples; we cap the current window at
   100 k rows by default to keep p-values meaningful.
 
@@ -73,4 +73,4 @@ Negative:
 ## Follow-ups
 
 - ADR-0011 — TreeSHAP per-prediction once we accept the image bloat.
-- Sprint 11 — scheduled drift worker, dashboard chart.
+-  — scheduled drift worker, dashboard chart.

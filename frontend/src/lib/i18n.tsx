@@ -1,4 +1,4 @@
-// Lightweight i18n — Sprint 12 hotfix.
+// Lightweight i18n — fix.
 //
 // WHY: the project's frontend is small and fully typed. Pulling react-i18next
 // would bloat the bundle. We need: four locales (RU, EN, DE, FR), a

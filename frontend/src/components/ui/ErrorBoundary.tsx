@@ -28,7 +28,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error): void {
-    // WHY: console is the dev visibility. Sprint-12+ may pipe these to a
+    // WHY: console is the dev visibility. future release may pipe these to a
     // backend log endpoint, but the in-process panel doesn't yet have one.
     // eslint-disable-next-line no-console
     console.error("[ErrorBoundary]", error);

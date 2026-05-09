@@ -1,4 +1,4 @@
-"""Drift-report API — Sprint 13 (audit C-list item 18c).
+"""Drift-report API — (audit C-list item 18c).
 
 WHY: the drift worker writes JSON files under ``ml/drift_reports/``.
 Operators currently SSH or `cat` them. This endpoint exposes the

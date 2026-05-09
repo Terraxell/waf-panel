@@ -64,7 +64,7 @@ class FeatureContribution(BaseModel):
 
 # WHY: explicit `method` provenance — tests + UI both need to know whether
 #      the weights came from .coef_ (LR), .feature_importances_ (XGBoost),
-#      or shap.TreeExplainer (Sprint 13, audit C13, opt-in via ML_USE_SHAP).
+#      or shap.TreeExplainer (audit C13, opt-in via ML_USE_SHAP).
 ExplainMethod = Literal["coef", "feature_importances", "shap", "unsupported"]
 
 

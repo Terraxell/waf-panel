@@ -6,8 +6,8 @@
 
 ## Context
 
-Sprint 9 wired the Lua subrequest in *annotate-only* mode: nginx adds
-`X-WAF-ML-Prob` to every request and never blocks. Sprint 10 wants to
+Wired: the Lua subrequest in *annotate-only* mode: nginx adds
+`X-WAF-ML-Prob` to every request and never blocks.  wants to
 flip the block on, but cautiously — a misconfigured ML side could
 take down the entire app's protective tier. We need:
 
@@ -34,7 +34,7 @@ gives us:
 `ML_BLOCK_THRESHOLD` env (default `1.0`) → nginx
 `set $ml_block_threshold "${ML_BLOCK_THRESHOLD}";` → Lua reads
 `tonumber(ngx.var.ml_block_threshold) or 1.0`. Changing the threshold
-through the UI requires a `nginx -s reload` (Sprint 10) — Sprint 11
+through the UI requires a `nginx -s reload`  
 adds shared-dict polling so changes take effect within 30 s without
 reload.
 
@@ -69,7 +69,7 @@ not by nginx).
   threshold change, which is acceptable.
 - **`prob == None`** (fallback). Always pass through — we never
   block on missing ML.
-- **Static asset paths.** Sprint 11 adds a per-route opt-out
+- **Static asset paths.** Adds: a per-route opt-out
   (`location ~* ^/static/` skips Lua subrequest entirely).
 
 ## Consequences
@@ -80,7 +80,7 @@ Positive:
 - Three independent kill-switches give defence-in-depth.
 
 Negative:
-- Sprint 10 reload-on-change is annoying; Sprint 11 fixes with
+-  reload-on-change is annoying;  fixes with
   shared-dict polling.
 - `ml_config` is one new table to migrate; minor.
 
@@ -90,9 +90,9 @@ Negative:
   cannot rollback without retraining.
 - **Threshold in env only.** Rejected — no audit trail, no UI.
 - **Two thresholds (warn-line + block-line).** Considered for
-  Sprint 11; out of scope here.
+  ; out of scope here.
 
 ## Follow-ups
 
-- Sprint 11 — shared-dict polling for threshold (no nginx reload).
+-  — shared-dict polling for threshold (no nginx reload).
 - ADR-0013 — per-route opt-out (Lua skip on static assets).

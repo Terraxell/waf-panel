@@ -1,4 +1,4 @@
-"""Bulk-import rules — Sprint 13 (audit C-list item 18a)."""
+"""Bulk-import rules — (audit C-list item 18a)."""
 
 from __future__ import annotations
 
@@ -129,8 +129,9 @@ def test_min_1_rule_required(client, admin_token):
 
 
 def test_real_run_writes_audit_summary(client, admin_token):
-    from waf_panel.repositories.deps import memory_audit_repo
     import asyncio
+
+    from waf_panel.repositories.deps import memory_audit_repo
 
     client.post(
         "/api/v1/rules/bulk",

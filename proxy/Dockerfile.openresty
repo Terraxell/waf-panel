@@ -1,8 +1,8 @@
-# OpenResty + ModSecurity v3 — opt-in proxy flavour for Sprint 9 Lua subrequest.
+# OpenResty + ModSecurity v3 — opt-in proxy flavour for  Lua subrequest.
 #
 # WHY: the default `owasp/modsecurity-crs:nginx-alpine` image ships mainline
 # nginx without `lua-nginx-module`, so calling `ngx.location.capture` from the
-# access phase is impossible. To hand block-mode (Sprint 10) a 5 ms scoring
+# access phase is impossible. To hand block-mode  a 5 ms scoring
 # budget on the request path we need OpenResty, which bundles LuaJIT + the
 # ngx_lua module out of the box.
 #

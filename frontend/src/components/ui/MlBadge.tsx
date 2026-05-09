@@ -18,7 +18,7 @@ interface MlBadgeProps {
  * fail open server-side, so the worst case is a `—` chip and a popover
  * explaining why ML couldn't decide.
  *
- * Sprint 13 (audit C17b): the explanation moved out of `title=` into a
+ * (audit C17b): the explanation moved out of `title=` into a
  * proper Popover — keyboard-accessible, instantly visible, and with the
  * contributors stack rendered as separate rows rather than ASCII soup.
  */

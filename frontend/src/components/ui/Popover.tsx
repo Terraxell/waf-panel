@@ -1,4 +1,4 @@
-// Popover — Sprint 13 (audit C17b).
+// Popover — (audit C17b).
 //
 // WHY: native `title=` has three problems for the MlBadge surface:
 //   1. Delay before show (~700 ms on most browsers) makes the badge

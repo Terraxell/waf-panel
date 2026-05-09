@@ -62,7 +62,7 @@ Targets:
   smoke              Run the smoke script against the running stack.
   migrate            Apply alembic upgrade head inside the backend container.
   ch-migrate         Re-apply infra/clickhouse/init.sql (CH views) idempotently.
-  bootstrap          First-time setup: migrate + ch-migrate (Sprint 14).
+  bootstrap          First-time setup: migrate + ch-migrate .
   test               Run backend pytest on the host (needs Python 3.11+).
   lint               Run ruff on the backend on the host.
   rebuild-frontend   Force a no-cache rebuild of the frontend image.
@@ -114,100 +114,6 @@ Examples:
 
     'bootstrap' {
         # First-time-stack helper: wraps the manual sequence we discovered
-        # the hard way during Sprint 13 smoke. Idempotent — safe to run
+        # the hard way during  smoke. Idempotent — safe to run
         # again if you suspect partial init.
-        Write-Host '[1/3] alembic upgrade head (postgres schema + admin seed)' -ForegroundColor Cyan
-        Invoke-Compose @('exec','backend','alembic','upgrade','head')
-        Write-Host '[2/3] ch-migrate (clickhouse views)' -ForegroundColor Cyan
-        & docker cp infra/clickhouse/init.sql waf-clickhouse:/tmp/init.sql | Out-Null
-        Invoke-Compose @(
-            'exec', 'clickhouse', 'clickhouse-client',
-            '--user', 'waf', '--password', 'waf_dev_only',
-            '--multiquery', '--queries-file=/tmp/init.sql'
-        )
-        Write-Host '[3/3] done. Login with admin@example.com / admin at http://localhost:3000' -ForegroundColor Green
-    }
-    'backend-shell'      { Invoke-Compose @('exec','backend','/bin/bash') }
-    'pg-shell'           { Invoke-Compose @('exec','postgres','psql','-U','waf','-d','waf_panel') }
-    'ch-shell'           { Invoke-Compose @('exec','clickhouse','clickhouse-client','--user','waf','--password','waf_dev_only','-d','waf_logs') }
-
-    'smoke' {
-        # WHY: smoke.sh expects bash + curl. Easiest portable way: run it
-        #      inside a throwaway alpine container that joins the project network.
-        Invoke-Compose @('run','--rm','--network=waf-panel_wafnet','--entrypoint','sh','proxy','-c',
-            'apk add --quiet bash curl >/dev/null && bash /workspace/scripts/smoke.sh',
-            '-v', "${PWD}:/workspace")
-    }
-
-    'test' {
-        Push-Location backend
-        try   { python -m pytest -q }
-        finally { Pop-Location }
-    }
-
-    'lint' {
-        Push-Location backend
-        try   { ruff check src tests }
-        finally { Pop-Location }
-    }
-
-    'nuke' {
-        Write-Host "About to drop ALL project volumes. Type 'yes' to confirm." -ForegroundColor Yellow
-        $confirm = Read-Host
-        if ($confirm -ne 'yes') { Write-Host 'aborted'; return }
-        Invoke-Compose @('down','-v')
-    }
-
-    'train' {
-        Push-Location ml
-        try   { python -m waf_ml.train --dataset synthetic }
-        finally { Pop-Location }
-    }
-
-    'train-register' {
-        Push-Location ml
-        try   { python -m waf_ml.train --dataset synthetic --register --activate xgboost }
-        finally { Pop-Location }
-    }
-
-    'ml-test' {
-        Push-Location ml
-        try   { python -m pytest -q }
-        finally { Pop-Location }
-    }
-
-    'ml-lint' {
-        Push-Location ml
-        try   { ruff check src tests }
-        finally { Pop-Location }
-    }
-
-    'ml-svc-test' {
-        Push-Location ml-service
-        try   { python -m pytest -q }
-        finally { Pop-Location }
-    }
-
-    'ml-svc-lint' {
-        Push-Location ml-service
-        try   { ruff check src tests }
-        finally { Pop-Location }
-    }
-
-    'ml-promote' {
-        # WHY: copy the latest trained version dir to ml/models/active so the
-        #      ml-service container picks it up on the next restart.
-        $latest = Get-ChildItem ml/models -Directory -Filter 'v*' -ErrorAction SilentlyContinue |
-                  Sort-Object Name | Select-Object -Last 1
-        if (-not $latest) { Write-Host 'no trained models in ml/models'; exit 1 }
-        $dst = 'ml/models/active'
-        if (Test-Path $dst) { Remove-Item -Recurse -Force $dst }
-        Copy-Item -Recurse $latest.FullName $dst
-        Write-Host "promoted $($latest.FullName) -> $dst"
-    }
-
-    'drift-check' {
-        # Sprint 11 — run one drift check inside the backend container.
-        Invoke-Compose @('exec','backend','python','-m','waf_panel.workers.drift_worker')
-    }
-}
+        Write

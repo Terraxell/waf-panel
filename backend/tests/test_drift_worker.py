@@ -1,6 +1,6 @@
 """Drift worker — pulls raw HTTP rows, featurises, checks all 25 cols.
 
-Sprint 11 hotfix: the worker now hits `traffic_log` (not `traffic_features`)
+fix: the worker now hits `traffic_log` (not `traffic_features`)
 and runs `waf_ml.features.featurize` per row, so token-flag drift
 (`tok_union_select`, `tok_script`, …) is part of the alert surface.
 """
@@ -159,7 +159,7 @@ async def test_drift_worker_alerts_on_attack_traffic_drift(baseline_dir):
     )
     assert res.status == "alert"
     assert res.alert_count >= 1
-    # Sprint 11 hotfix contract: the alert must include token-flag features,
+    # fix contract: the alert must include token-flag features,
     # not only length-based ones, because that's the whole point of the fix.
     payload = audit.rows[0]["payload"]
     flagged = {f["feature"] for f in payload.get("features", [])}

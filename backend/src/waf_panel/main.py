@@ -7,8 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from . import __version__
 from .api import audit as audit_api
-from .api import drift as drift_api
 from .api import auth as auth_api
+from .api import drift as drift_api
 from .api import health as health_api
 from .api import incidents as incidents_api
 from .api import metrics as metrics_api
@@ -18,7 +18,7 @@ from .clickhouse_client import dispose_clickhouse
 from .config import Settings, get_settings
 from .security_headers import SecurityHeadersMiddleware
 
-# WHY (Sprint 11 hotfix): refuse to start in production with a default
+# WHY (fix): refuse to start in production with a default
 # JWT secret. This is exactly the kind of "you forgot to rotate it"
 # incident that turns a 2-line .env mistake into a JWT-replay disaster.
 # Dev / test stays untouched — the default secret is fine there.
@@ -69,7 +69,7 @@ def create_app() -> FastAPI:
         redoc_url="/api/redoc",
         lifespan=_lifespan,
     )
-    # WHY (Sprint 13): security headers BEFORE CORS so the headers
+    # WHY : security headers BEFORE CORS so the headers
     # are emitted on every response, including preflight rejections.
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(

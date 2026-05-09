@@ -1,7 +1,7 @@
 """Drift worker — pull raw HTTP rows from ClickHouse, featurize them, run
 PSI + KS against the frozen 25-feature baseline.
 
-WHY (Sprint 11 hotfix): the previous version hit `traffic_features` and
+WHY (fix): the previous version hit `traffic_features` and
 compared only six numerical columns. The whole point of `waf_ml.features`
 is the 25-feature contract — including the eight token flags that signal
 real attack-distribution shift (UNION/SELECT, <script, /etc/passwd, …).

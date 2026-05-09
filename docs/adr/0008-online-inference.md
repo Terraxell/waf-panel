@@ -6,12 +6,12 @@
 
 ## Context
 
-Sprint 7 produced offline-trained `lr.pkl`, `xgboost.pkl`,
-`iforest.pkl` plus the Postgres `ml_models` registry. Sprint 8 needs
+ produced offline-trained `lr.pkl`, `xgboost.pkl`,
+`iforest.pkl` plus the Postgres `ml_models` registry.  needs
 to put those weights on the request path. We want the dashboard to
 show probability-of-attack for traffic events alongside ModSecurity
 verdicts, and we want a clear path to enabling block-mode in
-Sprint 10. We also want the ML side to be impossible to break the
+ We also want the ML side to be impossible to break the
 gateway with — no slow ML query may stall a user request.
 
 ## Decision
@@ -38,7 +38,7 @@ No DB writes. No registry mutations. The endpoint:
 
 - Looks up the active model (`registry.get_active`) **on startup**,
   not per request, and refreshes only on `SIGHUP` / `/admin/reload`
-  (deferred to Sprint 9).
+  (deferred to ).
 - Calls `featurize` from the same `waf_ml.features` module the
   trainer used. Drift between train and inference would break model
   quality silently — making this import the contract is the only
@@ -71,17 +71,17 @@ The backend mediates between the panel UI and `ml-service`:
   renders `—` and a tooltip; ModSecurity verdicts continue to
   drive blocking.
 
-### What this sprint does NOT do
+### What this release does NOT do
 
 - **Block on ML.** No `if prob > 0.95: return 403`. Premature.
   We need the FPR distribution from CSIC/CICIDS first, plus an
-  override for `is_active=false → never block`. Sprint 10.
+  override for `is_active=false → never block`. 
 - **nginx Lua subrequest.** The current `owasp/modsecurity-crs:nginx-
   alpine` image does not carry `lua-nginx-module`. Switching to
   OpenResty + a custom ModSecurity build is its own migration —
-  Sprint 9 with `WAF_USE_LUA` feature flag.
+   with `WAF_USE_LUA` feature flag.
 - **Per-prediction explanations (SHAP).** `shap` adds 200 MB and
-  costs ~5–20 ms per request. Sprint 9 adds it as an opt-in
+  costs ~5–20 ms per request. Adds: it as an opt-in
   endpoint `/explain` separate from `/score`.
 
 ## Consequences
@@ -110,5 +110,5 @@ Negative:
 
 ## Follow-ups
 
-- ADR-0009 (Sprint 9) — Lua subrequest path, OpenResty migration.
-- ADR-0010 (Sprint 10) — block-mode threshold and rollback.
+- ADR-0009  — Lua subrequest path, OpenResty migration.
+- ADR-0010  — block-mode threshold and rollback.

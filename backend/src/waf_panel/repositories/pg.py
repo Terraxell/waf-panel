@@ -123,7 +123,7 @@ class PgAuditRepo:
 class PgMlConfigRepo:
     """Postgres-backed implementation of ``MlConfigRepo``.
 
-    Sprint 11 — replaces the Sprint-10 in-process dict. Single key/value
+     — replaces the the in-process dict. Single key/value
     table; the threshold endpoint reads on every GET (cheap; one row),
     writes via ``ON CONFLICT (key) DO UPDATE`` for atomic upsert.
     """

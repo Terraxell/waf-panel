@@ -1,4 +1,4 @@
-// Theme provider — Sprint 13 (audit C17a).
+// Theme provider — (audit C17a).
 //
 // WHY: the provider has three moving parts that all silently degrade
 // to the wrong appearance if they break:

@@ -22,11 +22,11 @@ Geist / JetBrains Mono, no border-radius).
 - **No CSS framework.** Theme is hand-authored CSS custom properties in
   `src/styles/tokens.css`, a faithful translation of `design-system.md`.
   Components ship their own scoped CSS files via Vite's CSS modules.
-- **Recharts** added in Sprint 6 for the dashboard. Until then no chart
+- **Recharts** added in this release for the dashboard. Until then no chart
   library is bundled.
 - **No state-management library.** React's local state plus a tiny
-  `AuthContext` is sufficient for Sprint 4. React Query or SWR gets a
-  re-evaluation in Sprint 5 when more than one read endpoint per page
+  `AuthContext` is sufficient for  React Query or SWR gets a
+  re-evaluation in this release when more than one read endpoint per page
   appears.
 
 ## Alternatives considered
@@ -48,10 +48,10 @@ Geist / JetBrains Mono, no border-radius).
   the CSS lives in one obvious file per component, which is easier to
   defend in person.
 - We commit to writing TypeScript types for the API surface manually
-  in Sprint 4. ADR-0004 (Sprint 5 candidate) covers automating this from
+  in this release. ADR-0004 ( candidate) covers automating this from
   the FastAPI OpenAPI export.
 
 ## Follow-ups
 
-- ADR-0004 — Generate API types from OpenAPI (Sprint 5).
-- ADR-0005 — Persistent auth via HTTP-only cookies (Sprint 9).
+- ADR-0004 — Generate API types from OpenAPI .
+- ADR-0005 — Persistent auth via HTTP-only cookies .

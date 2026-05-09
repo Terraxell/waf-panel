@@ -1,7 +1,7 @@
 """Auth primitives: password hashing + JWT issue/verify.
 
 WHY: kept tiny on purpose. Anything fancier (refresh tokens, MFA, SSO) is a
-     Sprint-9 problem, and adding it now would mean code we throw away when
+     known problem, and adding it now would mean code we throw away when
      the design changes.
 """
 

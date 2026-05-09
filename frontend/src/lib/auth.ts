@@ -1,6 +1,6 @@
-// In-memory token store (Sprint 4).
+// In-memory token store .
 // SAFETY: nothing persisted to localStorage on purpose — see ADR-0003.
-// Sprint 9 replaces this with HTTP-only cookies.
+//  replaces this with HTTP-only cookies.
 
 let token: string | null = null;
 const listeners = new Set<() => void>();

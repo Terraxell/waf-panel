@@ -1,7 +1,7 @@
 """Smoke tests — verify the gateway boots and the contract holds.
 
 The full test suite (DB-backed repositories, RBAC matrix, audit log) lands in
-Sprint 4. These tests are the floor: every commit must keep them green.
+ These tests are the floor: every commit must keep them green.
 """
 
 from fastapi.testclient import TestClient

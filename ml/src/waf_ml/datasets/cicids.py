@@ -29,7 +29,7 @@ from .synthetic import LabelledRequest
 
 # WHY: CICIDS labels are heterogeneous. We map every non-BENIGN label
 #      to "malicious=1" so we have a clean binary problem. The full
-#      multi-class breakdown is a Sprint 9 task (per-class precision
+#      multi-class breakdown is a  task (per-class precision
 #      so the dashboard can call out web-attacks vs DoS).
 _BENIGN_LABEL = "BENIGN"
 

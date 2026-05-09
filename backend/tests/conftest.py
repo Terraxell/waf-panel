@@ -26,7 +26,7 @@ ADMIN_ID = UUID("00000000-0000-0000-0000-000000000001")
 def in_memory_repos() -> Iterator[InMemoryClickHouseClient]:
     """Switch repositories AND ClickHouse to in-memory for every test.
 
-    WHY (Sprint 11 hotfix): also clears the login rate-limit bucket
+    WHY (fix): also clears the login rate-limit bucket
     between cases. Without this, tests that share the `admin_token`
     fixture pile up calls into the same (testclient-ip, admin@example.com)
     bucket and the 6th test run trips a 429.

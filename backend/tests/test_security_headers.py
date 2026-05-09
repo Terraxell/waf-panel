@@ -1,4 +1,4 @@
-"""Security-headers middleware — Sprint 13 (audit C-list item 15)."""
+"""Security-headers middleware — (audit C-list item 15)."""
 
 from __future__ import annotations
 
@@ -67,8 +67,10 @@ def test_hsts_only_on_https():
     # Direct middleware unit-test for the https path: build a fake ASGI
     # request whose url.scheme is "https" and verify the header lands.
     import asyncio
+
     from starlette.requests import Request
     from starlette.responses import Response
+
     from waf_panel.security_headers import SecurityHeadersMiddleware
 
     async def _ok(_req):
@@ -97,8 +99,10 @@ def test_existing_response_headers_are_not_overwritten():
     """SAFETY: setdefault, not __setitem__ — Lua subrequest's
     X-WAF-ML-Prob and similar must survive."""
     import asyncio
+
     from starlette.requests import Request
     from starlette.responses import Response
+
     from waf_panel.security_headers import SecurityHeadersMiddleware
 
     async def _custom_csp(_req):

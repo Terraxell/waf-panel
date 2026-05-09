@@ -1,8 +1,8 @@
-// MlBadge — Sprint 13 (audit B10 close-out + C17b refactor).
+// MlBadge — (audit B10 close-out + C17b refactor).
 //
 // WHY: this badge is the user's only window into the ML verdict. It
 // MUST handle three states cleanly: prob present, fallback (ml-service
-// down), and `enabled=false`. Sprint 13 moved the explanation into a
+// down), and `enabled=false`. Moved: the explanation into a
 // Popover (keyboard-accessible, no native title= delay), so we no
 // longer assert against the title attribute.
 

@@ -1,4 +1,4 @@
-"""SHAP explainer wrapper — Sprint 13 (audit C13).
+"""SHAP explainer wrapper — (audit C13).
 
 WHY: ``shap`` is intentionally optional. The tests below verify the
 wrapper's three guarantees without forcing CI to install shap:

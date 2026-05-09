@@ -76,7 +76,7 @@ export const de: EnDict = {
   // ── Rules ──────────────────────────────────────────────────────
   "rules.kicker": "regeln",
   "rules.title": "Regel-Editor",
-  "rules.hint": "Custom-Regeln werden in PostgreSQL gespeichert und in Sprint 8 mit ModSecurity synchronisiert. CRS-Regeln (sourcetype=crs) werden mit dem Image geliefert.",
+  "rules.hint": "Custom-Regeln werden in PostgreSQL gespeichert und in this release mit ModSecurity synchronisiert. CRS-Regeln (sourcetype=crs) werden mit dem Image geliefert.",
   "rules.create_button": "Neue Regel",
   "rules.loading": "Wird geladen…",
   "rules.error": "Regelliste konnte nicht geladen werden.",
@@ -131,7 +131,7 @@ export const de: EnDict = {
   "ml.badge.cache_hit": "Cache-Treffer",
   "ml.badge.contributors": "Beitrag:",
 
-  // ── Search + pagination (Sprint 12) ────────────────────────────
+  // ── Search + pagination  ────────────────────────────
   "incidents.search_label": "SUCHE",
   "incidents.search_placeholder": "nach IP / Pfad",
   "incidents.load_more": "Mehr laden",

@@ -53,7 +53,7 @@ lint: ## Run linters across backend
 migrate: ## Apply alembic migrations to the running stack
 	$(COMPOSE) exec backend alembic upgrade head
 
-ch-migrate: ## Re-apply ClickHouse init.sql idempotently (Sprint 14 hotfix)
+ch-migrate: ## Re-apply ClickHouse init.sql idempotently (fix)
 	@# WHY: ClickHouse's docker-entrypoint runs *.sql once on first volume init.
 	@# When init.sql changes after that, the running CH never picks it up.
 	@# Every CREATE in init.sql is `IF NOT EXISTS`, so re-running is safe.
@@ -63,7 +63,7 @@ ch-migrate: ## Re-apply ClickHouse init.sql idempotently (Sprint 14 hotfix)
 		--multiquery --queries-file=/tmp/init.sql
 	@echo "ClickHouse migrations applied."
 
-bootstrap: migrate ch-migrate ## First-time stack setup (Sprint 14: schema + CH views + admin)
+bootstrap: migrate ch-migrate ## First-time stack setup (this release: schema + CH views + admin)
 	@echo "Bootstrap complete. Login at http://localhost:3000 — admin@example.com / admin"
 
 migrate-revision: ## Create a new alembic revision (pass MSG="…")
@@ -82,7 +82,7 @@ nuke: ## Stop and DROP all volumes — dev only, irreversible
 	$(COMPOSE) down -v
 	rm -rf volumes/
 
-# ── ML pipeline (Sprint 7+) ────────────────────────────────────────────
+# ── ML pipeline (future release) ────────────────────────────────────────────
 # WHY: keeps the trainer command-line in one place; CI just runs `make train`.
 #      Postgres registration only fires when --register or --activate is set,
 #      so the default invocation is safe to run with the stack down.
@@ -94,34 +94,4 @@ train: ## Train LR + XGBoost + IsolationForest on $(ML_DATASET); writes ml/model
 	cd $(ML_DIR) && $(ML_PY) -m waf_ml.train --dataset $(ML_DATASET)
 
 train-register: ## Train and register all models in Postgres; mark XGBoost active
-	cd $(ML_DIR) && $(ML_PY) -m waf_ml.train --dataset $(ML_DATASET) --register --activate xgboost
-
-ml-test: ## Run ML unit tests
-	cd $(ML_DIR) && $(ML_PY) -m pytest -q
-
-ml-lint: ## Lint the ml/ package
-	cd $(ML_DIR) && ruff check src tests
-
-# ── ml-service (Sprint 8) ──────────────────────────────────────────────
-ML_SVC_DIR := ml-service
-
-ml-svc-test: ## Run ml-service unit tests
-	cd $(ML_SVC_DIR) && $(ML_PY) -m pytest -q
-
-ml-svc-lint: ## Lint ml-service
-	cd $(ML_SVC_DIR) && ruff check src tests
-
-ml-svc-shell: ## Bash inside the running ml-service container
-	$(COMPOSE) exec ml-service /bin/bash
-
-# WHY: copy the latest trained artefacts into the bind-mount the container
-#      reads from. Operators run `make train` first, then `make ml-promote`
-#      to atomically swap the active model.
-ml-promote: ## Promote ml/models/<latest>/ to ml/models/active/
-	@latest=$$(ls -1d $(ML_DIR)/models/v* 2>/dev/null | sort | tail -n 1); \
-	if [ -z "$$latest" ]; then echo "no trained models in $(ML_DIR)/models"; exit 1; fi; \
-	rm -rf $(ML_DIR)/models/active && cp -r "$$latest" $(ML_DIR)/models/active; \
-	echo "promoted $$latest → $(ML_DIR)/models/active"
-
-drift-check: ## Run one drift check inside the backend container; exit 2 on alert
-	$(COMPOSE) exec backend python -m waf_panel.workers.drift_worker
+	cd $(ML_DIR) && $(ML_PY) -m waf_ml.train --dataset $(ML_DATASET) --register --activate xgboos

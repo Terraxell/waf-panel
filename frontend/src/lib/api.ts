@@ -71,7 +71,7 @@ export const api = {
   listAudit: (limit = 100, action_prefix?: string) =>
     request<AuditEntry[]>(`/audit${qs({ limit, action_prefix })}`),
 
-  // ── ML proxy (Sprint 8 + 9) ───────────────────────────────────────────
+  // ── ML proxy ( + 9) ───────────────────────────────────────────
   // WHY: backend fails open, so the UI gets a stable envelope even when
   //      ml-service is down — `fallback: true` and `prob: null`.
   mlInspect: (req: MlInspectRequest) =>

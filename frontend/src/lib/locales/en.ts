@@ -77,7 +77,7 @@ export const en = {
   // ── Rules ──────────────────────────────────────────────────────
   "rules.kicker": "rules",
   "rules.title": "Rule editor",
-  "rules.hint": "Custom rules live in PostgreSQL and sync to ModSecurity in Sprint 8. CRS rules (sourcetype=crs) ship with the image.",
+  "rules.hint": "Custom rules live in PostgreSQL and sync to ModSecurity in this release. CRS rules (sourcetype=crs) ship with the image.",
   "rules.create_button": "New rule",
   "rules.loading": "Loading…",
   "rules.error": "Failed to load rules.",
@@ -132,7 +132,7 @@ export const en = {
   "ml.badge.cache_hit": "cache hit",
   "ml.badge.contributors": "contributors:",
 
-  // ── Search + pagination (Sprint 12) ────────────────────────────
+  // ── Search + pagination  ────────────────────────────
   "incidents.search_label": "SEARCH",
   "incidents.search_placeholder": "by IP / path",
   "incidents.load_more": "Load more",
@@ -141,11 +141,7 @@ export const en = {
   "audit.load_more": "Load more",
 } as const;
 
-// WHY this maps to `string` (not `typeof en`): with `as const` above,
-// every value becomes a string literal — useful for the EN side's own
-// autocomplete, but it would force every translation to be the exact
-// English string, which is the opposite of what we want. Mapping each
-// key to `string` keeps the *key shape* as the contract (TS still fails
-// the build if RU/DE/FR is missing or has an extra key) while letting
-// values be any string the translator picked.
+// EnDict keeps the *key shape* as the contract — TS errors on a missing
+// or extra key in any sibling locale (ru/de/fr) — but values are plain
+// `string`, so translators are not forced to mirror the English literal.
 export type EnDict = { [K in keyof typeof en]: string };

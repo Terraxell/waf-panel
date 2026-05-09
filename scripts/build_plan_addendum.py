@@ -1,8 +1,8 @@
 """Append a CP-2 / CP-3 addendum to the existing .docx plan.
 
-WHY: Sprint 11 — the original `План_курсового_проекта_WAF.docx` was
-generated at Sprint 0 and lists what the project *intended* to deliver.
-After CP-3 closed (Sprint 10) we have actual numbers: tests passing,
+WHY:  — the original `План_курсового_проекта_WAF.docx` was
+generated at  and lists what the project *intended* to deliver.
+After CP-3 closed  we have actual numbers: tests passing,
 ADRs written, pipeline metrics, threshold calibration, attack-bench
 results. This script appends a faithful addendum at the document's end
 without touching the original sections — the supervisor can compare
@@ -166,18 +166,18 @@ def build() -> None:
     _heading(doc, ADDENDUM_HEADING, level=1)
     _para(
         doc,
-        "Раздел добавлен по итогам Sprint 11 проекта. В нём зафиксированы "
+        "Раздел добавлен по итогам  проекта. В нём зафиксированы "
         "фактические результаты на момент закрытия контрольных точек CP-2 "
         "(оффлайн-метрики ML) и CP-3 (полный гибрид прошёл стенд атак). "
         "Источник чисел — автоматический прогон тестов и attack-bench "
-        "(`bench/run.py`) в репозитории проекта на дату завершения Sprint 10.",
+        "(`bench/run.py`) в репозитории проекта на дату завершения ",
     )
 
     # ── CP-2 — оффлайн-метрики ML ───────────────────────────────────────
     _heading(doc, "Б.1. CP-2 — оффлайн ML-метрики", level=2)
     _para(
         doc,
-        "Закрыт в Sprint 7 с тремя моделями (Logistic Regression, XGBoost, "
+        "Закрыт в  с тремя моделями (Logistic Regression, XGBoost, "
         "Isolation Forest), обученными на едином стратифицированном split'е "
         "(test_size=0.2, stratify=y). Для каждой supervised-модели "
         "дополнительно посчитаны mean ± std по 5-fold stratified "
@@ -190,17 +190,17 @@ def build() -> None:
         "Запускалось через `make train` и `make train-register`; артефакты "
         "размещены в `ml/models/<version>/`, метаданные — в Postgres "
         "`ml_models`. Калибровка порога — отдельный модуль "
-        "`waf_ml.threshold` (Sprint 10) с CLI и JSON-отчётом ROC-trace.",
+        "`waf_ml.threshold`  с CLI и JSON-отчётом ROC-trace.",
     )
 
     _table(
         doc,
         headers=["Спринт", "Артефакт", "Объём кода", "Тесты"],
         rows=[
-            ["Sprint 7", "ml/src/waf_ml/{features,train,eval,registry}.py", "≈ 700 строк", "30 (features 9, train 4 + 1 CV, eval 6, registry 5, cicids 6)"],
-            ["Sprint 7", "ml/datasets/{synthetic,csic,cicids}.py", "≈ 280 строк", "вкл. в 30 выше"],
-            ["Sprint 9", "ml/src/waf_ml/drift.py (PSI + KS)", "≈ 200 строк", "12 (PSI invariants, KS, threshold mapping, CLI)"],
-            ["Sprint 10", "ml/src/waf_ml/threshold.py (калибровка)", "≈ 170 строк", "12 (sweep, monotonic, FPR-budget, CLI)"],
+            ["", "ml/src/waf_ml/{features,train,eval,registry}.py", "≈ 700 строк", "30 (features 9, train 4 + 1 CV, eval 6, registry 5, cicids 6)"],
+            ["", "ml/datasets/{synthetic,csic,cicids}.py", "≈ 280 строк", "вкл. в 30 выше"],
+            ["", "ml/src/waf_ml/drift.py (PSI + KS)", "≈ 200 строк", "12 (PSI invariants, KS, threshold mapping, CLI)"],
+            ["", "ml/src/waf_ml/threshold.py (калибровка)", "≈ 170 строк", "12 (sweep, monotonic, FPR-budget, CLI)"],
             ["ИТОГО CP-2", "пакет ml/", "≈ 1 350 строк", "55 тестов, 100 % проходят"],
         ],
     )
@@ -209,7 +209,7 @@ def build() -> None:
     _heading(doc, "Б.2. CP-3 — стенд атак и блокировка", level=2)
     _para(
         doc,
-        "Закрыт в Sprint 10. Online-инференс работает в score-augment "
+        "Закрыт в  Online-инференс работает в score-augment "
         "режиме (`/api/v1/ml/inspect`, fail-open). Block-mode вшит в "
         "Lua-subrequest `score.lua` за переменной `ml_block_threshold` "
         "(default 1.0 — annotate-only) с тремя независимыми kill-switch'ами "
@@ -234,8 +234,8 @@ def build() -> None:
             ["Block-mode", "Включаемый, безопасно отключаемый", "Lua + ml_block_threshold; 3 kill-switch'а (UI, env, flavor)"],
             ["Attack bench", "FPR ≤ 5 %, FNR ≤ 30 %", "CLI-выход 0/2 по этим бюджетам; harness покрыт 5 unit-тестами"],
             ["AWS WAF", "Опциональный outbound", "boto3 IPSet sync, fail-soft, rate-limit 5 мин (10 unit-тестов)"],
-            ["Persist θ (Sprint 11)", "ml_config с audit-row", "Postgres ml_config + Alembic 0002; 7 тестов API"],
-            ["Drift worker (Sprint 11)", "Off-band PSI + KS", "backend/workers/drift_worker.py + 5 тестов на стаб-CH"],
+            ["Persist θ ", "ml_config с audit-row", "Postgres ml_config + Alembic 0002; 7 тестов API"],
+            ["Drift worker ", "Off-band PSI + KS", "backend/workers/drift_worker.py + 5 тестов на стаб-CH"],
         ],
     )
 
@@ -243,7 +243,7 @@ def build() -> None:
     _heading(doc, "Б.3. Сводка тестового покрытия и ADR", level=2)
     _para(
         doc,
-        "На дату закрытия Sprint 11 в репозитории присутствуют четыре "
+        "На дату закрытия  в репозитории присутствуют четыре "
         "независимых пакета: `backend/` (FastAPI-шлюз с RBAC + audit), "
         "`ml/` (оффлайн-конвейер), `ml-service/` (online-инференс), "
         "`bench/` (attack-bench). Каждый пакет имеет свой `pyproject.toml` "

@@ -1,6 +1,6 @@
 """Threshold calibration for ML block-mode.
 
-WHY: Sprint 9 ships annotate-only Lua subrequest. Sprint 10 wants block-mode
+WHY: Ships: annotate-only Lua subrequest.  wants block-mode
 behind a calibrated threshold θ. We define the calibration objective as
 
     θ* = min { θ ∈ [0, 1] : FPR(θ) ≤ target_fpr }
@@ -21,7 +21,7 @@ CLI:
 
 The CLI loads the eval report from `report.json`, falls back to a
 synthetic dataset if no labelled scores file is provided, and prints
-the chosen θ. Sprint 10 backend reads it from `ml_config`.
+the chosen θ.  backend reads it from `ml_config`.
 """
 
 from __future__ import annotations

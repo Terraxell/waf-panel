@@ -15,7 +15,7 @@ Two metrics, both per feature:
   distortions PSI misses. Returns p-value; flag drift at < 0.05.
 
 WHY this is offline-only: drift is a slow signal (hours-to-days),
-not request-time. Sprint 11 will run this on a schedule and write
+not request-time.  will run this on a schedule and write
 into `incidents` when something flags.
 """
 

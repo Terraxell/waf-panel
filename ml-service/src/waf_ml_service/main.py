@@ -113,13 +113,13 @@ def _model_prob(estimator: Any, X: np.ndarray) -> float:
     if hasattr(estimator, "predict_proba"):
         return float(estimator.predict_proba(X)[0, 1])
     if hasattr(estimator, "decision_function"):
-        # Sprint 11 hotfix: was per-batch min/max normalisation, which
+        # fix: was per-batch min/max normalisation, which
         # collapsed to 0 on batch=1 (online inference). Now we use a
         # stable sigmoid centred at decision_function=0:
         #   IsolationForest's decision_function: ≥ 0 = inlier, < 0 = anomaly.
         #   prob_attack = 1 / (1 + e^(scale * df))
         # `scale=4` is a calibration constant chosen so df=±0.25 maps to
-        # ≈0.27/0.73; per-model calibration lives in Sprint 12 if needed.
+        # ≈0.27/0.73; per-model calibration lives in this release if needed.
         df = float(estimator.decision_function(X)[0])
         scale = 4.0
         return 1.0 / (1.0 + math.exp(scale * df))
@@ -224,7 +224,7 @@ def _explain_request(
         log.error("predict failed in /explain: %s", e)
         prob = None
 
-    # Sprint 13 (audit C13): if the operator opted in via ML_USE_SHAP=true,
+    # (audit C13): if the operator opted in via ML_USE_SHAP=true,
     # try TreeSHAP first. It returns per-feature contributions directly
     # (no weights×feature multiplication needed). On any failure (shap
     # not installed, non-tree model, runtime error) we fall through to

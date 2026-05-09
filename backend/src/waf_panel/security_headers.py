@@ -1,4 +1,4 @@
-"""Security-headers middleware — Sprint 13 (audit C-list item 15).
+"""Security-headers middleware — (audit C-list item 15).
 
 WHY: the threat-model named "no security-headers middleware" as a
 known gap. This adds the conventional set in one place:
@@ -26,7 +26,7 @@ without spinning up uvicorn.
 
 from __future__ import annotations
 
-from typing import Awaitable, Callable
+from collections.abc import Awaitable, Callable
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request

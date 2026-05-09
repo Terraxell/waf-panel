@@ -7,7 +7,7 @@
 
 ## Context
 
-Sprint 3 promotes the gateway from "stub with in-memory dicts" to a proper
+ promotes the gateway from "stub with in-memory dicts" to a proper
 service with PostgreSQL persistence. That decision introduces three
 risks:
 
@@ -65,4 +65,4 @@ or rollback.
 
 - ADR-0003 — Online/offline split for the ML service.
 - Consider a `redis`-backed audit log mirror for tamper-evident retention
-  in Sprint 9.
+  in this release.

@@ -80,9 +80,9 @@ Negative:
   a JS challenge flow on the panel side.
 - **Use AWS Network Firewall (NFW) instead.** NFW is L3/L4-oriented;
   HTTP-feature-aware filtering is what AWS WAF is for. NFW is a
-  Sprint 11+ option for IP rate-limiting at the VPC edge.
+  future release option for IP rate-limiting at the VPC edge.
 
 ## Follow-ups
 
-- Sprint 11 — scheduled sync (cron in the backend).
+-  — scheduled sync (cron in the backend).
 - ADR-0014 — multi-region IPSet fan-out.

@@ -76,7 +76,7 @@ export const ru: EnDict = {
   // ── Rules ──────────────────────────────────────────────────────
   "rules.kicker": "правила",
   "rules.title": "Конструктор правил",
-  "rules.hint": "Custom-правила хранятся в PostgreSQL и в Sprint 8 синхронизируются в ModSecurity. CRS-правила (sourcetype=crs) поставляются образом.",
+  "rules.hint": "Custom-правила хранятся в PostgreSQL и в  синхронизируются в ModSecurity. CRS-правила (sourcetype=crs) поставляются образом.",
   "rules.create_button": "Создать правило",
   "rules.loading": "Загружается…",
   "rules.error": "Не удалось получить список правил.",
@@ -131,7 +131,7 @@ export const ru: EnDict = {
   "ml.badge.cache_hit": "кэш-хит",
   "ml.badge.contributors": "вклад:",
 
-  // ── Search + pagination (Sprint 12) ────────────────────────────
+  // ── Search + pagination  ────────────────────────────
   "incidents.search_label": "ПОИСК",
   "incidents.search_placeholder": "по IP / пути",
   "incidents.load_more": "Показать ещё",

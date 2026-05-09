@@ -6,12 +6,12 @@ project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-— (Sprint 15+: real CSIC bench, mTLS between containers, multi-region
+— (Future: real CSIC bench, mTLS between containers, multi-region
 IPSet sync, signed model artefacts, full ClickHouse migration runner)
 
 ## [1.1.1] — 2026-05-19
 
-Sprint 14 — bootstrap completeness hotfix. Closes four production-
+— bootstrap completeness hotfix. Closes four production-
 readiness gaps found via end-to-end smoke against a clean docker-compose
 stack. Pure infrastructure / data-migration fixes; no API contract
 changes, no behavioural regressions.
@@ -25,7 +25,6 @@ changes, no behavioural regressions.
   "old volume + new schema" gap.
 - `make bootstrap` / `.\dev.ps1 bootstrap`: one-shot helper that runs
   alembic + ch-migrate in order. Idempotent.
-- `docs/sprints/sprint-14-{plan,summary}.md`.
 
 ### Changed
 
@@ -48,7 +47,7 @@ changes, no behavioural regressions.
 
 ## [1.1.0] — 2026-05-12
 
-Sprint 13 — post-defence audit C-list. Pure additions and opt-in
+— post-defence audit C-list. Pure additions and opt-in
 features; no breaking changes vs `v1.0.0`. The default request path,
 default UI render, and default ML-service behaviour are unchanged.
 
@@ -91,11 +90,11 @@ default UI render, and default ML-service behaviour are unchanged.
 
 First taggable release. Closes the 12-week course-project roadmap with
 all three checkpoints (CP-1, CP-2, CP-3) and the post-defence audit
-hotfixes from Sprint 11. The stack boots end-to-end on Docker Desktop
+hotfixes from initial release. The stack boots end-to-end on Docker Desktop
 (Windows / Linux / macOS), 170+ unit tests pass without infrastructure,
 and the .docx plan carries an addendum with real numbers.
 
-### Added — protective layer (Sprints 1–2)
+### Added — protective layer (initial release)
 
 - nginx + ModSecurity v3 + OWASP CRS v4 (1700 rules, paranoia 1)
   blocking SQLi / XSS / RCE on the request critical path.
@@ -105,7 +104,7 @@ and the .docx plan carries an addendum with real numbers.
 - `docs/troubleshooting.md` — 18 documented edge cases hit during
   first-bring-up.
 
-### Added — backend gateway (Sprint 3)
+### Added — backend gateway
 
 - FastAPI + SQLAlchemy 2 (async) + Alembic gateway with RBAC
   (`admin / analyst / viewer`).
@@ -115,7 +114,7 @@ and the .docx plan carries an addendum with real numbers.
 - Repository protocol + InMemory + Pg implementations for testability.
 - Service layer: `auth_service`, `rules_service` with audit logging.
 
-### Added — dashboard SPA (Sprints 4–6)
+### Added — dashboard SPA (initial release)
 
 - React 18 + TypeScript + Vite + React Router + React Query SPA.
 - Hand-authored CSS design system (4 colors, monospace + serif typography,
@@ -127,7 +126,7 @@ and the .docx plan carries an addendum with real numbers.
   reads (`rps_per_minute`, `top_attacks_lifetime`).
 - ADR-0001 through ADR-0006.
 
-### Added — offline ML pipeline (Sprint 7)
+### Added — offline ML pipeline
 
 - `ml/` package: `waf_ml.features` (25-feature `featurize` — single
   source of truth for trainer + inference), `train`, `eval`, `registry`,
@@ -140,7 +139,7 @@ and the .docx plan carries an addendum with real numbers.
   (partial unique index for `is_active`).
 - `make train` + `make train-register` + `make ml-promote` targets.
 
-### Added — online inference (Sprint 8)
+### Added — online inference
 
 - `ml-service` container (FastAPI + joblib): `POST /score`, `/healthz`,
   `/readyz`. Loads active model from registry → filesystem fallback.
@@ -150,7 +149,7 @@ and the .docx plan carries an addendum with real numbers.
   `fallback_reason`).
 - ADR-0007, ADR-0008.
 
-### Added — explanations and drift (Sprint 9)
+### Added — explanations and drift
 
 - `POST /explain` in ml-service: top-K feature contributors via
   `model.coef_` (LR) or `feature_importances_` (XGBoost), normalised
@@ -164,7 +163,7 @@ and the .docx plan carries an addendum with real numbers.
   annotate-only at this stage.
 - ADR-0009, ADR-0010.
 
-### Added — block-mode and attack bench (Sprint 10, CP-3)
+### Added — block-mode and attack bench (CP-3)
 
 - `waf_ml.threshold` calibration: `θ* = min{θ : FPR(θ) ≤ target_fpr}`
   with full ROC-trace JSON.
@@ -181,7 +180,7 @@ and the .docx plan carries an addendum with real numbers.
 - Frontend `MlThresholdSlider` with rollback button on the Rules page.
 - ADR-0011, ADR-0012.
 
-### Added — persistence, drift worker, plan addendum (Sprint 11)
+### Added — persistence, drift worker, plan addendum
 
 - Postgres `ml_config(key, value_text, updated_at, updated_by)` table
   + Alembic 0002 + `MlConfigRepo` Protocol + InMemory / Pg
@@ -194,7 +193,7 @@ and the .docx plan carries an addendum with real numbers.
   `План_курсового_проекта_WAF.docx` with real numbers (≈156 tests
   count by package, 12 ADRs, CP-2 / CP-3 actuals).
 
-### Added — i18n (Sprint 12)
+### Added — i18n
 
 - Lightweight in-process i18n (`frontend/src/lib/i18n.tsx` + `locales/`)
   for **RU / EN / DE / FR**. Type-checked dictionaries; missing key on
@@ -205,7 +204,7 @@ and the .docx plan carries an addendum with real numbers.
 - All four pages, two ML widgets, login, layout — translated.
   `localeTag` map drives `Date.toLocaleString` per language.
 
-### Security — Sprint 11 hotfix
+### Security — fix
 
 - `POST /auth/login` rate limit: 5 attempts per `(ip, lower(email))`
   per 60 s, sliding-window in-process backend, fail-open on internal
@@ -221,10 +220,10 @@ and the .docx plan carries an addendum with real numbers.
 
 ### Fixed
 
-- Sprint 4 hotfix: email claim added to JWT (was showing
+- fix: email claim added to JWT (was showing
   `unknown@example.com` on the dashboard); CSS overflow on long emails
   in dashboard cards.
-- Multiple Windows + Docker Desktop bring-up issues across sprints,
+- Multiple Windows + Docker Desktop bring-up issues across the project,
   documented in `docs/troubleshooting.md`.
 
 ### Tooling
@@ -262,6 +261,6 @@ Then create a GitHub Release, paste the [1.0.0] section above as the body.
 After CI is green on `main`:
 
 ```bash
-git tag -a v1.1.0 -m "v1.1.0 — Sprint 13: post-defence audit C-list"
+git tag -a v1.1.0 -m "v1.1.0 — Post-defence audit C-list"
 git push origin v1.1.0
 ```

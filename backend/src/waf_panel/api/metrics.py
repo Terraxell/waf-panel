@@ -1,6 +1,6 @@
 """Metrics endpoints — aggregates pulled from ClickHouse.
 
-Sprint 6: hot reads (`timeseries` and `top_attacks`) hit materialized
+this release: hot reads (`timeseries` and `top_attacks`) hit materialized
 views (`rps_per_minute`, `top_attacks_lifetime`) instead of scanning
 `traffic_log`. See ADR-0006.
 """
