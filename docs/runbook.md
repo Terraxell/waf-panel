@@ -252,7 +252,52 @@ value is < 32 chars or in the default-blocklist (see
 
 ---
 
-## 8. ClickHouse fills up (`waf_logs` volume > 80%)
+## 8. Admin password rotation
+
+**Symptom.** Backend refuses to start under `WAF_ENV=production`
+with this in the log:
+
+```
+RuntimeError: WAF_ENV=production but the seeded admin user
+(admin@example.com) still has the default password 'admin'.
+```
+
+**Cause.** Alembic migration `0003` seeds `admin@example.com` with
+the literal password `admin` so a fresh dev / course-defence stack
+boots usable. In production that hash is a known-published default
+from this repo, so the startup guard refuses to expose the panel
+until it's rotated.
+
+**Mitigate.**
+
+```bash
+# 1) Generate a new password and its argon2id hash. Use the same
+#    parameters as passlib's default so verification stays cheap.
+python - <<'PY'
+import getpass
+from passlib.hash import argon2
+print(argon2.hash(getpass.getpass("New admin password: ")))
+PY
+
+# 2) Patch the row in Postgres. -- replace <HASH> with the output above.
+docker compose exec postgres psql -U waf -d waf_panel -c \
+  "UPDATE users SET password_hash = '<HASH>' WHERE email = 'admin@example.com';"
+
+# 3) Restart the backend so the lifespan re-checks.
+docker compose up -d --force-recreate backend
+```
+
+**Verify.** The startup log no longer contains the RuntimeError, and
+`POST /api/v1/auth/login` with the *old* password returns 401 while
+the new password returns 200.
+
+**Why not bake a CLI for this.** A bootstrap CLI is on the roadmap
+(see ADR-0013 follow-ups) but the SQL path is two commands and
+zero new code surface — fine for the scope this project ships at.
+
+---
+
+## 9. ClickHouse fills up (`waf_logs` volume > 80%)
 
 **Symptom.** Disk pressure on the host; `clickhouse-client` warnings;
 slow dashboard reads.
@@ -279,7 +324,7 @@ materialize the deletion.
 
 ---
 
-## 9. Backup / restore (planned procedure, not yet automated)
+## 10. Backup / restore (planned procedure, not yet automated)
 
 **WHY this is in the runbook.**  backlog has `make backup` /
 `make restore`; until then, the steps below are the manual procedure
@@ -303,7 +348,7 @@ the backend before restoring** so half-written rows don't appear.
 
 ---
 
-## 10. Common defence-time questions
+## 11. Common defence-time questions
 
 These come up at the course-project review; pre-cached answers:
 

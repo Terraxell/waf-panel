@@ -104,7 +104,10 @@ bring-up (each with symptom, root cause, fix).
 | Postgres            | `localhost:5432`                     | rules / users / audit              |
 
 Default panel login: `admin@example.com` / `admin`. Rotate it via the
-API or psql before any non-dev usage.
+API or psql before any non-dev usage. The backend refuses to start
+when `WAF_ENV=production` and the admin password is still `admin` —
+mirrors the same guard on `JWT_SECRET`. See `docs/runbook.md` section
+8 for the rotation snippet.
 
 ### Verify the protective layer
 
