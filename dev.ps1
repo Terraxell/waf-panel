@@ -15,7 +15,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Position=0, Mandatory=$false)]
-    [ValidateSet('up','down','restart','ps','logs','smoke','migrate','ch-migrate','bootstrap','test','lint','rebuild-frontend','rebuild-ml-service','vendor-ml','backend-shell','pg-shell','ch-shell','nuke','train','train-register','ml-test','ml-lint','ml-svc-test','ml-svc-lint','ml-promote','drift-check','help')]
+    [ValidateSet('up','down','restart','ps','logs','smoke','migrate','ch-migrate','bootstrap','test','lint','rebuild-frontend','rebuild-ml-service','vendor-ml','backend-shell','pg-shell','ch-shell','nuke','train','train-register','ml-test','ml-lint','ml-svc-test','ml-svc-lint','ml-promote','drift-check','rotate-admin','rebaseline','help')]
     [string]$Command = 'help'
 )
 
@@ -63,6 +63,8 @@ Targets:
   migrate            Apply alembic upgrade head inside the backend container.
   ch-migrate         Re-apply infra/clickhouse/init.sql (CH views) idempotently.
   bootstrap          First-time setup: migrate + ch-migrate .
+  rotate-admin       Rotate the admin password via argon2 (interactive).
+  rebaseline         Refresh the ML drift baseline if no alerts in last 72h.
   test               Run backend pytest on the host (needs Python 3.11+).
   lint               Run ruff on the backend on the host.
   rebuild-frontend   Force a no-cache rebuild of the frontend image.

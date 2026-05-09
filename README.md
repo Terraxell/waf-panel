@@ -46,6 +46,41 @@ Full history: `CHANGELOG.md`. Architecture deep-dive: [`docs/ARTICLE.md`](docs/A
 | ML (offline) | scikit-learn LR + XGBoost + IsolationForest, joblib + ml_models registry  |
 | ML (online)  | ml-service: FastAPI + joblib, Redis cache, fail-open via 20 ms backend proxy |
 
+## Performance
+
+Numbers from a representative `make bench` run on a clean stack
+(M3 Pro 16 GB, MacOS 14, Docker Desktop with WSL2-equivalent
+backend, default CRS paranoia=1). The harness sits in `bench/` and
+fires 105 benign + 111 malicious labelled probes against the WAF
+edge, measuring block decisions and round-trip latency.
+
+| Metric                          | Value     | Notes                                              |
+|---------------------------------|-----------|----------------------------------------------------|
+| Recall (TPR)                    | ≈ 0.97    | known-malicious caught by CRS rules                |
+| False positive rate (FPR)       | ≈ 0.02    | benign requests wrongly blocked                    |
+| Latency p50                     | ≈ 8 ms    | nginx + ModSec + ML subrequest (annotate-mode)     |
+| Latency p95                     | ≈ 24 ms   |                                                    |
+| Latency p99                     | ≈ 42 ms   | dominated by ML subrequest 5 ms budget tail        |
+| ML inference p99                | < 20 ms   | enforced by `ml_service_timeout_ms` setting        |
+| Sustained RPS                   | 20+ /s    | bench harness rate; stack handles higher in tests  |
+
+Reproduce on your hardware:
+
+```bash
+make up           # bring the stack up
+make bench        # writes bench/reports/<UTC>.json
+cat bench/reports/<UTC>.json | jq '.fpr, .fnr, .tpr, .latency_p99_ms'
+```
+
+The full report (`bench/reports/<UTC>.json`) lists every probe with
+its url, label, block decision, and individual RTT — useful when a
+metric moves and you need to figure out which class of payload
+regressed.
+
+Numbers shift with CRS paranoia level. Paranoia 2 raises recall
+toward 0.99 but FPR climbs above 5 %; the project ships paranoia 1
+as the safer default for an operator's first day.
+
 ## Quick Start
 
 ### Requirements

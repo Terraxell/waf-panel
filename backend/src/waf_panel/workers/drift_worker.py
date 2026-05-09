@@ -20,7 +20,7 @@ import json
 import logging
 import sys
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 from uuid import UUID
@@ -235,6 +235,179 @@ async def _run_from_cli(
     return 1
 
 
+# ── Re-baselining — optional companion to run_drift_check ────────────
+
+
+async def _count_recent_drift_alerts(
+    audit_repo: Any, *, since_hours: int = 72,
+) -> int:
+    """How many ml.drift.{alert,warn} rows were written in the last N
+    hours? Pulled from the audit repo so the in-memory test fixture
+    works without ClickHouse / PG.
+
+    SAFETY: limit=200 caps the scan; in steady state there are ~24
+    drift rows / day, so this covers a 7-day window comfortably.
+    """
+    rows = await audit_repo.recent(limit=200)
+    cutoff = datetime.now(UTC) - timedelta(hours=since_hours)
+    n = 0
+    for r in rows:
+        ts = r.get("ts")
+        action = r.get("action", "")
+        if not isinstance(ts, datetime):
+            continue
+        if ts < cutoff:
+            continue
+        if action in ("ml.drift.alert", "ml.drift.warn"):
+            n += 1
+    return n
+
+
+async def _pull_baseline_columns(
+    ch_client: Any, *, window_hours: int, pull_limit: int,
+) -> dict[str, Any]:
+    """Same pull + featurize as run_drift_check, packaged so the
+    rebaseliner re-uses the trainer's contract."""
+    sql = _build_pull_sql(window_hours, pull_limit)
+    rows = await ch_client.query_json(sql)
+    return _featurize_rows(rows)
+
+
+def _write_baseline_csv(path: Path, columns: dict[str, Any]) -> None:
+    """Atomic-ish write: dump to <path>.tmp, rename. Backs up any
+    existing file as <path>.bak.<timestamp> so the previous baseline
+    can be restored manually if the new one turns out wrong."""
+    import csv
+
+    import numpy as np
+
+    if path.exists():
+        ts = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+        backup = path.with_suffix(path.suffix + f".bak.{ts}")
+        path.replace(backup)
+        log.info("rebaseline: backed up old baseline -> %s", backup)
+
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    headers = list(columns.keys())
+    rows = list(zip(*(np.asarray(columns[h]).tolist() for h in headers), strict=False))
+    with tmp.open("w", encoding="utf-8", newline="") as fh:
+        w = csv.writer(fh)
+        w.writerow(headers)
+        for row in rows:
+            w.writerow(row)
+    tmp.replace(path)
+
+
+async def rebaseline_if_quiet(
+    *,
+    ch_client: Any,
+    audit_repo: Any,
+    actor_id: UUID | None = None,
+    active_model_dir: Path = Path("ml/models/active"),
+    quiet_window_hours: int = 72,
+    sample_window_hours: int = 24,
+    pull_limit: int = 100_000,
+) -> dict[str, Any]:
+    """Refresh the frozen baseline IFF no drift alert/warn fired in
+    the last `quiet_window_hours`. Returns a small dict so the CLI
+    can print + the tests can assert.
+
+    WHY a quiet-window gate: the frozen baseline is a *known-good*
+    distribution. Re-baselining the moment an alert fires bakes the
+    alerted traffic into the new baseline -- the next check has
+    nothing to compare against. 72 h spans a normal weekend without
+    re-baselining mid-incident.
+    """
+    recent = await _count_recent_drift_alerts(
+        audit_repo, since_hours=quiet_window_hours,
+    )
+    if recent > 0:
+        payload: dict[str, Any] = {
+            "status": "skipped",
+            "reason": "recent_drift_alerts",
+            "recent_count": recent,
+            "quiet_window_hours": quiet_window_hours,
+        }
+        await audit_repo.record(
+            actor_id=actor_id,
+            action="ml.baseline.skipped",
+            target="baseline_refresh",
+            payload=payload,
+        )
+        return payload
+
+    cols = await _pull_baseline_columns(
+        ch_client,
+        window_hours=sample_window_hours,
+        pull_limit=pull_limit,
+    )
+    n_rows = len(next(iter(cols.values()))) if cols else 0
+    if n_rows == 0:
+        payload = {
+            "status": "skipped",
+            "reason": "no_traffic_in_window",
+            "sample_window_hours": sample_window_hours,
+        }
+        await audit_repo.record(
+            actor_id=actor_id,
+            action="ml.baseline.skipped",
+            target="baseline_refresh",
+            payload=payload,
+        )
+        return payload
+
+    baseline_csv = _baseline_path(active_model_dir)
+    baseline_csv.parent.mkdir(parents=True, exist_ok=True)
+    _write_baseline_csv(baseline_csv, cols)
+
+    payload = {
+        "status": "refreshed",
+        "n_rows_used": n_rows,
+        "sample_window_hours": sample_window_hours,
+        "baseline_path": str(baseline_csv),
+    }
+    await audit_repo.record(
+        actor_id=actor_id,
+        action="ml.baseline.refreshed",
+        target="baseline_refresh",
+        payload=payload,
+    )
+    log.info(
+        "rebaseline: wrote %d rows to %s (sample window %dh)",
+        n_rows, baseline_csv, sample_window_hours,
+    )
+    return payload
+
+
+async def _rebaseline_from_cli(
+    *,
+    active_model_dir: Path,
+    quiet_window_hours: int,
+    sample_window_hours: int,
+    pull_limit: int,
+) -> int:
+    from ..clickhouse_client import get_clickhouse
+    from ..db.session import get_session
+    from ..repositories.deps import get_audit_repo
+
+    ch = get_clickhouse()
+    async for s in get_session():
+        assert s is not None, "drift_worker CLI requires a real DB session"
+        audit = await get_audit_repo(s)
+        result = await rebaseline_if_quiet(
+            ch_client=ch,
+            audit_repo=audit,
+            active_model_dir=active_model_dir,
+            quiet_window_hours=quiet_window_hours,
+            sample_window_hours=sample_window_hours,
+            pull_limit=pull_limit,
+        )
+        await s.commit()
+        print(f"rebaseline {result['status']}: {result}")
+        return 0 if result["status"] == "refreshed" else 0  # skip is not a fail
+    return 1
+
+
 def main(argv: list[str] | None = None) -> int:
     import argparse
 
@@ -243,7 +416,27 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--window-hours", type=int, default=24)
     ap.add_argument("--pull-limit", type=int, default=100_000)
     ap.add_argument("--report-dir", type=Path, default=Path("ml/drift_reports"))
+    # WHY a flag, not a subcommand: the existing `make drift-check` invocation
+    # passes a flat arg list; --rebaseline keeps that shape and just swaps
+    # the action when set.
+    ap.add_argument(
+        "--rebaseline",
+        action="store_true",
+        help=(
+            "Refresh ml/models/active/baseline_features.csv from the last "
+            "--window-hours of traffic_log -- ONLY if no drift alert/warn "
+            "happened in the last --quiet-window-hours."
+        ),
+    )
+    ap.add_argument("--quiet-window-hours", type=int, default=72)
     args = ap.parse_args(argv)
+    if args.rebaseline:
+        return asyncio.run(_rebaseline_from_cli(
+            active_model_dir=args.active_model_dir,
+            quiet_window_hours=args.quiet_window_hours,
+            sample_window_hours=args.window_hours,
+            pull_limit=args.pull_limit,
+        ))
     return asyncio.run(_run_from_cli(
         active_model_dir=args.active_model_dir,
         window_hours=args.window_hours,
@@ -256,4 +449,4 @@ if __name__ == "__main__":
     sys.exit(main())
 
 
-__all__ = ["DriftRunResult", "main", "run_drift_check"]
+__all__ = ["DriftRunResult", "main", "rebaseline_if_quiet", "run_drift_check"]

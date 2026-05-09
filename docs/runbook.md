@@ -268,7 +268,25 @@ boots usable. In production that hash is a known-published default
 from this repo, so the startup guard refuses to expose the panel
 until it's rotated.
 
-**Mitigate.**
+**Mitigate (preferred — uses the project CLI).**
+
+```bash
+# Linux / macOS
+make rotate-admin EMAIL=admin@example.com
+# Windows / PowerShell
+.\dev.ps1 rotate-admin -Email admin@example.com
+```
+
+The CLI prompts for the new password (no echo, no shell-history
+leak), hashes through the same `passlib.argon2` the auth path uses,
+and updates the row in one round trip. Restart the backend so the
+startup guard re-checks:
+
+```bash
+docker compose up -d --force-recreate backend
+```
+
+**Mitigate (fallback — pure psql, kept for documentation).**
 
 ```bash
 # 1) Generate a new password and its argon2id hash. Use the same
