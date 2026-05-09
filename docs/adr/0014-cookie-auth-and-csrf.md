@@ -72,9 +72,20 @@ Trade-offs:
 ### Double-submit CSRF token
 
 A second cookie, `waf_csrf`, holds a 32-byte URL-safe random token.
-The SPA reads it from `document.cookie` (this cookie is **not**
-httpOnly — by design) and echoes it back in `X-CSRF-Token` on every
-mutating request (POST/PUT/PATCH/DELETE).
+The cookie is **not** httpOnly — by design — but in practice the SPA
+doesn't read it from `document.cookie`. Instead the same token value
+is also returned in the body of `POST /auth/login` and
+`GET /auth/csrf`; the SPA caches that in an in-memory store and
+echoes it back via `X-CSRF-Token` on every mutating request
+(POST/PUT/PATCH/DELETE).
+
+WHY the body channel and not `document.cookie`: keeps the SPA
+agnostic to cookie-jar quirks (cross-tab eviction, `Partitioned`
+attribute on Chrome, etc.) and lets backend tests assert the
+contract via JSON without parsing Set-Cookie headers. The cookie is
+still set so the **server** can compare it against the header — the
+browser's cookie jar is the source of truth, the body is a delivery
+mechanism.
 
 The middleware compares: `cookie value == header value`. If they
 don't match, 403. The cookie+header pair refreshes on login and on
@@ -99,17 +110,23 @@ This keeps CLI/CI flows unchanged.
 
 ### Frontend impact
 
-- `api.ts` adds `credentials: 'include'` so the cookie auto-attaches.
-- For mutating verbs, the wrapper reads `waf_csrf` from
-  `document.cookie` and adds `X-CSRF-Token`.
-- `auth.ts` no longer holds a JWT. It holds the *CSRF token* (in
-  memory), which is read once after login and kept in sync via the
-  cookie on each `/auth/me` call.
+- `api.ts` adds `credentials: 'include'` on every request so the
+  httpOnly cookie auto-attaches. For mutating verbs the wrapper
+  pulls the CSRF token from the in-memory store and adds
+  `X-CSRF-Token`. A 401 response clears the in-memory state so
+  `RequireAuth` bounces the user to /login on the next render.
+- `auth.ts` no longer holds a JWT. It holds the *CSRF token* and a
+  `authed: boolean` flag the SPA mirrors from the server's session
+  state — the JWT itself is never readable by JS.
 - `Login.tsx` ignores `access_token` from the JSON response — the
   cookie is what matters now. The token in the body stays for CLI.
+- `App.tsx` runs a one-shot bootstrap probe on mount: `GET /auth/me`
+  detects an existing session left over from a prior tab, and
+  `GET /auth/csrf` populates the in-memory CSRF token before the
+  user can trigger a mutating call.
 - `subscribe(listener)` keeps notifying the App shell when auth state
-  changes; the gate is `isAuthenticated()` which now means "we have a
-  CSRF token in memory", set after a successful `/auth/me`.
+  changes; `isAuthenticated()` now means "the bootstrap probe or a
+  recent /auth/login succeeded".
 
 ## Consequences
 
