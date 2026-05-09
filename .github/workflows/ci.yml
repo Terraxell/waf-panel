@@ -162,10 +162,13 @@ jobs:
           pip install -e ml[dev] --quiet
           pip install -e ml-service[dev] --quiet
       - name: pip-audit (combined env)
-        # WHY no --disable-pip: that flag requires -r REQUIREMENTS;
-        # we audit the resolved env, so plain pip-audit on the
-        # current interpreter is the right invocation.
-        run: pip-audit --strict
+        # WHY --skip-editable: our three packages (waf-panel-backend,
+        # waf-ml, waf-ml-service) are installed editable for the audit
+        # job. They are not on PyPI and pip-audit's strict mode treats
+        # 'cannot resolve' as a failure. --skip-editable means 'audit
+        # the third-party tree only' which is exactly what we want for
+        # supply-chain risk: we don't ship our own packages to end users.
+        run: pip-audit --strict --skip-editable
 
   frontend:
     name: frontend (tsc + eslint + vitest + vite build)
