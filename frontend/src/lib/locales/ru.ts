@@ -138,4 +138,23 @@ export const ru: EnDict = {
   "audit.search_label": "ПОИСК",
   "audit.search_placeholder": "по target / payload",
   "audit.load_more": "Показать ещё",
+
+  // ── Drift reports ──────────────────────────────────────────────
+  "nav.drift": "Дрифт",
+  "drift.kicker": "детекция дрифта",
+  "drift.title": "Отчёты о дрифте",
+  "drift.hint": "PSI + KS вердикты по фичам, которые пишет drift-воркер. Кликни по строке, чтобы увидеть полный разбор по колонкам.",
+  "drift.empty": "Отчётов пока нет. Запусти `make drift-check` (или дождись расписания), чтобы сгенерировать первый.",
+  "drift.error": "Не удалось загрузить отчёты о дрифте.",
+  "drift.col.report": "Отчёт",
+  "drift.col.generated": "Сформирован",
+  "drift.col.status": "Статус",
+  "drift.col.alerts": "Алерты",
+  "drift.col.warns": "Предупр.",
+  "drift.col.rows": "Строк проверено",
+  "drift.detail.close": "Закрыть",
+  "drift.detail.error": "Не удалось загрузить отчёт.",
+  "drift.detail.feature": "Фича",
+  "drift.detail.features_compared": "Фичей сравнено",
+  "drift.detail.no_features": "В этом отчёте нет фич.",
 };

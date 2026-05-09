@@ -138,4 +138,23 @@ export const de: EnDict = {
   "audit.search_label": "SUCHE",
   "audit.search_placeholder": "nach target / payload",
   "audit.load_more": "Mehr laden",
+
+  // ── Drift reports ──────────────────────────────────────────────
+  "nav.drift": "Drift",
+  "drift.kicker": "Drift-Erkennung",
+  "drift.title": "Drift-Berichte",
+  "drift.hint": "PSI + KS-Werte pro Feature aus dem Drift-Worker. Klick eine Zeile für die vollständige Aufschlüsselung.",
+  "drift.empty": "Noch keine Drift-Berichte. Starte `make drift-check`, um einen zu erzeugen.",
+  "drift.error": "Drift-Berichte konnten nicht geladen werden.",
+  "drift.col.report": "Bericht",
+  "drift.col.generated": "Erzeugt",
+  "drift.col.status": "Status",
+  "drift.col.alerts": "Alarme",
+  "drift.col.warns": "Warnungen",
+  "drift.col.rows": "Geprüfte Zeilen",
+  "drift.detail.close": "Schließen",
+  "drift.detail.error": "Bericht konnte nicht geladen werden.",
+  "drift.detail.feature": "Feature",
+  "drift.detail.features_compared": "Verglichene Features",
+  "drift.detail.no_features": "Keine Features in diesem Bericht.",
 };

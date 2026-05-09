@@ -131,4 +131,26 @@ export interface MlExplainResponse {
   fallback_reason: MlFallbackReason | null;
 }
 
-// ── ML 
+// ── Drift reports (C-list 18c, fronted by /api/v1/drift) ─────────
+export type DriftLevel = "alert" | "warn" | "clean" | "ok";
+
+export interface DriftFeatureRow {
+  feature: string;
+  psi: number;
+  ks_pvalue: number | null;
+  level: DriftLevel;
+}
+
+export interface DriftReportSummary {
+  name: string;
+  generated_at: string | null;
+  status: string;
+  alert_count: number;
+  warn_count: number;
+  n_rows_checked: number;
+}
+
+export interface DriftReportFull extends DriftReportSummary {
+  n_features_compared: number;
+  features: DriftFeatureRow[];
+}
