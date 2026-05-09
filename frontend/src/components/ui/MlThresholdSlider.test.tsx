@@ -54,7 +54,7 @@ describe("<MlThresholdSlider>", () => {
     const slider = screen.getByRole("slider");
     expect(slider).toBeDisabled();
     expect(screen.queryByRole("button", { name: /apply/i })).toBeNull();
-    expect(screen.queryByRole("button", { name: /rollback/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /roll back/i })).toBeNull();
   });
 
   it("admin sees Apply + Rollback; Apply fires PUT with the new value", async () => {
@@ -87,7 +87,7 @@ describe("<MlThresholdSlider>", () => {
     vi.mocked(api.mlThresholdPut).mockResolvedValue({ value: 1.0 });
 
     render(wrap(<MlThresholdSlider user={ADMIN} />));
-    const rollback = await screen.findByRole("button", { name: /rollback/i });
+    const rollback = await screen.findByRole("button", { name: /roll back/i });
     await waitFor(() => expect(rollback).not.toBeDisabled());
 
     await userEvent.setup().click(rollback);
@@ -99,7 +99,7 @@ describe("<MlThresholdSlider>", () => {
   it("Rollback is disabled when threshold is already 1.0 (annotate-only)", async () => {
     vi.mocked(api.mlThresholdGet).mockResolvedValue({ value: 1.0 });
     render(wrap(<MlThresholdSlider user={ADMIN} />));
-    const rollback = await screen.findByRole("button", { name: /rollback/i });
+    const rollback = await screen.findByRole("button", { name: /roll back/i });
     expect(rollback).toBeDisabled();
   });
 
