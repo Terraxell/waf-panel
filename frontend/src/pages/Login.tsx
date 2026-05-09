@@ -66,4 +66,11 @@ export function Login() {
             required
             error={error ?? undefined}
           />
-          <div className="row" style={{ justif
+          <div className="row" style={{ justifyContent: "flex-end" }}>
+            <Button type="submit" loading={loading}>{t("login.submit")}</Button>
+          </div>
+        </form>
+      </div>
+    </main>
+  );
+}
