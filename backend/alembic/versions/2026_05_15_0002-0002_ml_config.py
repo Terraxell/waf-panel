@@ -4,7 +4,7 @@ Revision ID: 0002
 Revises: 0001
 Create Date: 2026-05-15
 
-WHY: Sprint 11 — drop the in-memory threshold dict from Sprint 10 and
+WHY:  — drop the in-memory threshold dict from this release and
 persist `ml_block_threshold` (and future settings) in Postgres. Same
 idempotency pattern as 0001: `_table_missing()` gate so the migration
 re-applies safely against a volume that already ran init.sql.

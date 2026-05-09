@@ -1,4 +1,4 @@
-// Popover — Sprint 13 (audit C17b).
+// Popover — (audit C17b).
 //
 // WHY: every claim the comment in Popover.tsx makes about
 // keyboard-parity, role="tooltip", and Esc-dismiss should fail loud

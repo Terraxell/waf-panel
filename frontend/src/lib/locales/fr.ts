@@ -76,7 +76,7 @@ export const fr: EnDict = {
   // ── Rules ──────────────────────────────────────────────────────
   "rules.kicker": "règles",
   "rules.title": "Éditeur de règles",
-  "rules.hint": "Les règles personnalisées sont stockées dans PostgreSQL et synchronisées avec ModSecurity en Sprint 8. Les règles CRS (sourcetype=crs) sont fournies avec l’image.",
+  "rules.hint": "Les règles personnalisées sont stockées dans PostgreSQL et synchronisées avec ModSecurity en  Les règles CRS (sourcetype=crs) sont fournies avec l’image.",
   "rules.create_button": "Nouvelle règle",
   "rules.loading": "Chargement…",
   "rules.error": "Impossible de charger les règles.",
@@ -131,7 +131,7 @@ export const fr: EnDict = {
   "ml.badge.cache_hit": "hit du cache",
   "ml.badge.contributors": "contributeurs :",
 
-  // ── Search + pagination (Sprint 12) ────────────────────────────
+  // ── Search + pagination  ────────────────────────────
   "incidents.search_label": "RECHERCHE",
   "incidents.search_placeholder": "par IP / chemin",
   "incidents.load_more": "Charger plus",

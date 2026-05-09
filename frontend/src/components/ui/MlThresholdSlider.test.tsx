@@ -1,4 +1,4 @@
-// MlThresholdSlider — Sprint 13 (B10 close-out).
+// MlThresholdSlider  (B10 close-out).
 //
 // WHY: this is the kill-switch surface from ADR-0011. A regression that
 // silently disables the rollback button or the admin gate would leave

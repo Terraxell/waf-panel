@@ -6,9 +6,9 @@
 
 ## Context
 
-Sprint 8 placed `ml-service` next to the gateway. The dashboard
+ placed `ml-service` next to the gateway. The dashboard
 calls it via the backend proxy, but the request *itself* is not
-yet scored synchronously on the nginx side. Sprint 10 wants
+yet scored synchronously on the nginx side.  wants
 block-mode (`prob > 0.95 → 403`); to keep p99 under 20 ms we need
 the subrequest to fire from nginx, not from a proxied backend
 round-trip.
@@ -51,7 +51,7 @@ end
 local ok, body = pcall(cjson.decode, res.body)
 if not ok or not body.prob then return end
 if body.prob >= tonumber(ngx.var.ml_block_threshold) then
-    -- Sprint 10 enables this block; Sprint 9 only annotates.
+    --  enables this block;  only annotates.
     -- ngx.exit(403)
 end
 ngx.req.set_header("X-WAF-ML-Prob", tostring(body.prob))
@@ -65,14 +65,14 @@ Two SLOs, both enforced in the Lua side:
 
 ### What this ADR explicitly defers
 
-- **Block-mode toggle.** Sprint 9 ships the Lua wiring in *annotate*
-  mode (header only). Sprint 10 flips the threshold check on after
+- **Block-mode toggle.** Ships: the Lua wiring in *annotate*
+  mode (header only).  flips the threshold check on after
   CSIC/CICIDS calibration.
 - **In-Lua feature extraction.** No. Lua sends the raw fields
   (method/path/query/UA) and `ml-service` calls `featurize`. One
   source of truth; LuaJIT replicating Python feature math is the
   way to silent quality regressions.
-- **Per-route opt-out.** Sprint 10 — `location ~* ^/static/` would
+- **Per-route opt-out.**  — `location ~* ^/static/` would
   skip the subrequest to save latency on cacheable assets.
 
 ## Consequences
@@ -88,7 +88,7 @@ Negative:
 - OpenResty image build is ~20 minutes vs 30 seconds for the
   upstream CRS image. Documented in `docs/troubleshooting.md`.
 - `lua-resty-redis` would let Lua hit Redis directly and skip
-  `ml-service` on cache hits — Sprint 11 optimisation.
+  `ml-service` on cache hits  optimisation.
 
 ## Alternatives considered
 
@@ -99,15 +99,15 @@ Negative:
 - **Sidecar `auth_request` directive.** Works without Lua but is
   HEAD-only; can't pass body to the score endpoint.
 - **APISix / Kong as the proxy.** Way too much for a course
-  project; would re-do all of Sprints 1–8.
+  project; would re-do all of the initial release.
 
 ## Follow-ups
 
 - ADR-0011 — block-mode threshold + rollback procedure.
-- Sprint 10 — calibration + threshold flip.
-- Sprint 11 — `lua-resty-redis` for cache short-circuit.
+-  — calibration + threshold flip.
+-  — `lua-resty-redis` for cache short-circuit.
 
-## Addendum (Sprint 13) — per-route opt-out
+## Addendum  — per-route opt-out
 
 Static assets, favicon, health/ready endpoints don't benefit from ML
 scoring and shouldn't pay the 5 ms budget. The OpenResty template now

@@ -2,7 +2,7 @@
 
 A short log of issues we hit on the local stack and how to resolve them.
 Each entry: what you see → why → fix. Eleven entries, roughly in the
-order we ran into them while bringing up Sprint 4.
+order we ran into them while bringing up 
 
 ## proxy keeps restarting with `Invalid input: block`
 

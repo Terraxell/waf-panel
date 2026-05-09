@@ -18,7 +18,7 @@ class _UserRow:
     email: str
     password_hash: str
     role: str
-    # WHY: defaults to True so tests can omit it; Sprint 0 contract.
+    # WHY: defaults to True so tests can omit it;  contract.
     is_active: bool = True
 
 
@@ -111,7 +111,7 @@ class InMemoryAuditRepo:
 
 
 class InMemoryMlConfigRepo:
-    """Sprint 11 — same key/value contract as the Pg version, dict-backed.
+    """ — same key/value contract as the Pg version, dict-backed.
 
     WHY: keeps existing in-memory test fixtures simple. Production wiring
     goes through ``PgMlConfigRepo`` which actually writes to Postgres.

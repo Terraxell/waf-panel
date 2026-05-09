@@ -78,7 +78,7 @@ export function Dashboard() {
           <span className="mono-label">{t("dashboard.card.rules_total")}</span>
         </Card>
 
-        <Card title={t("dashboard.card.ml_model")} hint="ml_models · sprint 7">
+        <Card title={t("dashboard.card.ml_model")} hint="ml_models">
           <strong>—</strong>
           <span className="mono-label">{t("dashboard.card.ml_model_inactive")}</span>
         </Card>

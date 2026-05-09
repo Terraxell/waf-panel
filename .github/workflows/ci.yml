@@ -140,7 +140,7 @@ jobs:
           node-version: "20"
       - name: install
         # WHY: --include=optional so rollup pulls its Linux-musl wheels.
-        # Sprint 4 troubleshooting #6: missing optional deps break vite
+        #  troubleshooting #6: missing optional deps break vite
         # build on a fresh Linux runner.
         run: npm install --include=optional
       - name: typecheck

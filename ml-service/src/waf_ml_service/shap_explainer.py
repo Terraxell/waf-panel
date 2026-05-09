@@ -1,4 +1,4 @@
-"""Optional TreeSHAP-backed explainer — Sprint 13 (audit C-list item 13).
+"""Optional TreeSHAP-backed explainer — (audit C-list item 13).
 
 WHY: the default ``/explain`` path uses ``weights × feature_value`` —
 fast, dependency-free, and faithful for linear models, but for tree
@@ -21,8 +21,8 @@ from __future__ import annotations
 
 import logging
 import threading
-from weakref import WeakKeyDictionary
 from typing import Any
+from weakref import WeakKeyDictionary
 
 import numpy as np
 
@@ -30,7 +30,7 @@ log = logging.getLogger("waf-ml-service.shap")
 
 # WeakKey: when the model object is garbage-collected (e.g. a hot-swap),
 # the cached explainer goes with it. No memory leak, no stale weights.
-_EXPLAINER_CACHE: "WeakKeyDictionary[Any, Any]" = WeakKeyDictionary()
+_EXPLAINER_CACHE: WeakKeyDictionary[Any, Any] = WeakKeyDictionary()
 _LOCK = threading.Lock()
 _IMPORT_FAILED = False  # remembered between calls to avoid retry storms
 

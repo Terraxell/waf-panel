@@ -32,7 +32,7 @@ export function Incidents() {
   });
   const [ip, setIp] = useState("");
   const [method, setMethod] = useState("");
-  // Sprint 12: client-side full-text search across the loaded rows.
+  // this release: client-side full-text search across the loaded rows.
   const [search, setSearch] = useState("");
 
   const incidents = useQuery({
@@ -165,7 +165,7 @@ export function Incidents() {
         );
       })()}
 
-      {/* Sprint 12: paginated "Load more" — bumps the server-side `limit`
+      {/* this release: paginated "Load more" — bumps the server-side `limit`
           in steps of +100. Rendered only when the page is full (a heuristic
           for "there might be more"). */}
       {incidents.data && incidents.data.length >= (filters.limit ?? 100) && (

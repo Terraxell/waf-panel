@@ -109,7 +109,7 @@ async def _fire(
         method=probe.method, path_query=probe.path_query,
         label=probe.label, status=res.status_code,
         # SAFETY: 403 is the protective contract — both ModSec and the
-        #         Sprint 10 ML block-mode use 403. Anything else counts
+        #          ML block-mode use 403. Anything else counts
         #         as "allowed" for the bench arithmetic.
         blocked=(res.status_code == 403),
         latency_ms=round(elapsed_ms, 3),

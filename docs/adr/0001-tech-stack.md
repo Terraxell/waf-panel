@@ -30,7 +30,7 @@ The constraints are concrete:
 - **Rejected: Coraza.** Younger, less mature documentation; revisit after
   course completion.
 - **Rejected: AWS WAF as the default.** Costs money on every request; not
-  reproducible on a laptop. Becomes an optional adapter in Sprint 10.
+  reproducible on a laptop. Becomes an optional adapter in this release.
 
 ### OLTP store
 

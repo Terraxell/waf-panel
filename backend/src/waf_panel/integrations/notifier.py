@@ -1,4 +1,4 @@
-"""Notification webhook adapter — Sprint 13 (audit C-list item 18b).
+"""Notification webhook adapter — (audit C-list item 18b).
 
 WHY: drift alerts and admin-level config changes deserve a push signal,
 not just an audit-log row that nobody reads. We support a single
@@ -16,7 +16,7 @@ Design contract:
     edits must keep going even if Slack is having a bad day.
   * **Rate-limit floor.** Per-channel cooldown (env-configurable, 60 s
     default) prevents notification storms when drift flaps. The
-    in-process bucket is fine for one backend replica; Sprint 14+ moves
+    in-process bucket is fine for one backend replica; future release moves
     it to Redis when we run multi-replica.
   * **Body shape.** Slack's standard ``{"text": "..."}`` works on most
     receivers without modification. Operators with non-Slack relays

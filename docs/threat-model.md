@@ -57,9 +57,9 @@ Three boundaries:
 | Threat                                       | Mitigation                                                                                  | Residual                                                              |
 |----------------------------------------------|---------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
 | Stolen JWT used as another admin             | argon2id passwords; 60-min TTL; `email` claim; rotate `JWT_SECRET` per env                  | Compromised secret = full panel takeover until rotated (kill-switch via `WAF_ENV=production` startup guard prevents default secrets shipping to prod) |
-| Brute-forced admin login                     | Sliding-window 5/60s per `(IP, email.lower())` → HTTP 429; argon2id is also slow on purpose | Distributed login attempts across IPs would dilute the bucket; Sprint-13 candidate: Redis-backed shared limit |
-| Default admin (`admin@example.com / admin`)  | Documented in README + init.sql comment; production startup checks JWT_SECRET, but not the seed user | Operator-discipline gap; Sprint-13 candidate: refuse-to-start when default admin row + production env both true |
-| ml-service request-spoofing inside compose   | Plain HTTP inside compose private net; backend trusts the response                          | An attacker on the host network could MITM ml-service. Mitigation candidate (Sprint 13): container-to-container mTLS |
+| Brute-forced admin login                     | Sliding-window 5/60s per `(IP, email.lower())` → HTTP 429; argon2id is also slow on purpose | Distributed login attempts across IPs would dilute the bucket; future candidate: Redis-backed shared limit |
+| Default admin (`admin@example.com / admin`)  | Documented in README + init.sql comment; production startup checks JWT_SECRET, but not the seed user | Operator-discipline gap; future candidate: refuse-to-start when default admin row + production env both true |
+| ml-service request-spoofing inside compose   | Plain HTTP inside compose private net; backend trusts the response                          | An attacker on the host network could MITM ml-service. Mitigation candidate : container-to-container mTLS |
 
 ### T — Tampering
 
@@ -81,7 +81,7 @@ Three boundaries:
 
 | Threat                                            | Mitigation                                                                          | Residual                                          |
 |---------------------------------------------------|-------------------------------------------------------------------------------------|---------------------------------------------------|
-| Login enumeration (different message for unknown email vs wrong password) | Single error string from `AuthService.login` ("invalid credentials"); same status 401 in both cases | Timing side-channel from argon2id verify only on email-found path; mitigated by `argon2id` constant-cost on a dummy hash when email missing — *Sprint-13 candidate*, currently the email-not-found path returns faster |
+| Login enumeration (different message for unknown email vs wrong password) | Single error string from `AuthService.login` ("invalid credentials"); same status 401 in both cases | Timing side-channel from argon2id verify only on email-found path; mitigated by `argon2id` constant-cost on a dummy hash when email missing — *future candidate*, currently the email-not-found path returns faster |
 | Response leaks of `JWT_SECRET` / Postgres DSN     | Settings never serialised by any endpoint; `Settings.postgres_dsn` is property-only  | Operator-on-host can `cat .env`                   |
 | ModSec audit log PII                              | Volume mounted into Vector and ClickHouse; not exposed via panel                    | DB-direct access reads them; no PII-redaction at write-time |
 | ML block decisions with full path / query in `traffic_log` | RBAC limits panel surface to viewer+; no public read endpoint                | Anyone with ClickHouse credentials reads them; same DB-admin caveat |
@@ -102,7 +102,7 @@ Three boundaries:
 | `viewer` performs admin-only action             | Endpoint-level `Depends(require_role("admin"))` on every mutating endpoint                | Bug in the dependency injection would silently let calls through; mitigated by per-endpoint tests |
 | Modify role through API                         | `users` table not exposed via REST; role changes are out-of-band (psql)                   | Acceptable for course project; production needs a managed user-admin endpoint |
 | Container escape (proxy → host)                 | Out of scope for the panel; ModSec runs as `nginx` user, not root; no `--privileged`      | Standard Docker isolation              |
-| Operator with host write swaps `ml.pkl` (joblib RCE) | Sprint-13 candidate: signed model artefacts; currently we trust the bind-mount             | Documented in §6 below                 |
+| Operator with host write swaps `ml.pkl` (joblib RCE) | future candidate: signed model artefacts; currently we trust the bind-mount             | Documented in §6 below                 |
 
 ## 4. Mitigation map → ADRs / code
 
@@ -124,9 +124,9 @@ Three boundaries:
 * OS-level hardening (Docker daemon, kernel, container runtime).
 * Insider attacks by an operator with full host / DB access.
 * Supply-chain attacks against `pip` / `npm` packages (we lock versions
-  in `pyproject.toml` / `package-lock.json`; deeper SCA is Sprint-13+).
+  in `pyproject.toml` / `package-lock.json`; deeper SCA is future release).
 
-## 6. Known gaps / Sprint-13+ candidates
+## 6. Known gaps / future release candidates
 
 1. **Login enumeration timing.** Email-not-found path skips argon2id;
    fix by hashing a dummy on the missing-email branch.
@@ -145,6 +145,6 @@ Three boundaries:
 
 ## 7. Review cadence
 
-Reviewed at every CP closure (Sprint 4 / 8 / 10) and after every
-post-audit hotfix sprint. Next review: when blocking-mode actually
-flips on (Sprint 13+, after CSIC-calibrated FPR-budget proof).
+Reviewed at every CP closure ( / 8 / 10) and after every
+post-audit hotfix. Next review: when blocking-mode actually
+flips on (future release, after CSIC-calibrated FPR-budget proof).

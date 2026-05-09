@@ -1,7 +1,7 @@
 """HTTP-request → feature vector.
 
 WHY: the same function MUST run during training and during online
-     inference (Sprint 8). If they drift, model quality silently
+     inference . If they drift, model quality silently
      collapses. We pin the contract with `tests/test_features.py`
      against a fixed input.
 

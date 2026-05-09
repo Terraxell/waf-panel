@@ -1,4 +1,4 @@
-// Light/Dark theme provider — Sprint 13 (audit C-list item 17a).
+// Light/Dark theme provider — (audit C-list item 17a).
 //
 // WHY: the panel sees long sessions on a dark room (NOC). A reflective
 // off-white background (#FAFAF7) is the right default for a project

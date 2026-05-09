@@ -55,7 +55,7 @@ def _normalise(ip: str) -> str | None:
     return f"{addr.compressed}/32"
 
 
-# Module-level mutable state, scoped to the process. Sprint 11 will move
+# Module-level mutable state, scoped to the process.  will move
 # this into Redis so multiple gateway replicas share the rate-limit floor.
 _LAST_SYNC_TS: dict[str, float] = {}
 

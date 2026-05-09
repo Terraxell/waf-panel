@@ -124,7 +124,7 @@ def register(
 def get_active(*, algo: str | None = None, dsn: str | None = None) -> RegisteredModel | None:
     """Return the currently active model row, or None.
 
-    NOTE: `algo` filter is provided for Sprint 8's online inference path,
+    NOTE: `algo` filter is provided for 's online inference path,
           which may want the active *xgboost* specifically.
     """
     import psycopg

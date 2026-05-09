@@ -161,9 +161,9 @@ class AuditLog(Base):
 
 
 class MlConfig(Base):
-    """Sprint 11 — one row per operator-controllable ML setting.
+    """ — one row per operator-controllable ML setting.
 
-    WHY: Sprint 10 stored the block-mode threshold in process memory;
+    WHY:  stored the block-mode threshold in process memory;
     multi-replica gateways need persistence and an audit trail. This
     table is intentionally generic key/value so future settings (drift
     cadence, alert routing) reuse the same plumbing.

@@ -12,7 +12,7 @@ interface Props {
 }
 
 /**
- * Sprint 10 — ADR-0011 kill-switch. Admin moves θ between 0 and 1;
+ *  — ADR-0011 kill-switch. Admin moves θ between 0 and 1;
  * non-admins see the value as read-only. Setting back to 1.0 disables
  * block-mode (annotate-only).
  */

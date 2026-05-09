@@ -43,7 +43,7 @@ class Settings(BaseSettings):
     jwt_ttl_minutes: int = 60
     jwt_algorithm: str = "HS256"
 
-    # ── ml-service (Sprint 8) ───────────────────────────────────────
+    # ── ml-service  ───────────────────────────────────────
     ml_service_url: str = "http://ml-service:8001"
     ml_service_timeout_ms: int = 20
 
@@ -51,7 +51,7 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:5173"]
     log_level: str = "INFO"
 
-    # ── Deploy environment (Sprint 11 hotfix) ───────────────────────
+    # ── Deploy environment (fix) ───────────────────────
     # WHY: in production we refuse to start with a default JWT secret.
     #      Set WAF_ENV=production before deploying — explicit operator
     #      acknowledgment that secrets are configured.

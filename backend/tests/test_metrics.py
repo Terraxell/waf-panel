@@ -1,6 +1,6 @@
 """Tests for /api/v1/metrics — overview + timeseries.
 
-Sprint 6: top_attacks reads `top_attacks_lifetime` MV, timeseries reads
+this release: top_attacks reads `top_attacks_lifetime` MV, timeseries reads
 `rps_per_minute` MV. Counters still hit `traffic_log` (uniqExact).
 """
 

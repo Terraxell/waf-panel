@@ -65,9 +65,9 @@ WHERE event_type = 'modsec' AND ts > now() - INTERVAL 24 HOUR
 GROUP BY path;
 ```
 
-## Why now (Sprint 6) and not earlier
+## Why now  and not earlier
 
-Until Sprint 5 the dashboard didn't read ClickHouse at all. We needed
+Until  the dashboard didn't read ClickHouse at all. We needed
 the actual query shapes locked-in before promoting them to MV — moving
 an MV is more expensive than rewriting an endpoint.
 
@@ -91,10 +91,10 @@ an MV is more expensive than rewriting an endpoint.
 - Endpoints don't change shape. They start to issue the cheaper query
   against the MV target table; the API contract is unchanged.
 - A new operational consideration: if `traffic_log` is truncated (dev
-  reset), the MVs go out of sync. Sprint 6 ships a `make ch-reset`
+  reset), the MVs go out of sync. Ships: a `make ch-reset`
   helper that drops + recreates the MVs in one step.
 
 ## Follow-ups
 
-- Once we have ML scores per request (Sprint 8), add an MV
+- Once we have ML scores per request , add an MV
   `mv_score_distribution_hourly` for the drift dashboard.

@@ -3,7 +3,7 @@
 # only renders templates from /etc/nginx/templates/. We mount this in compose
 # under the same path the OpenResty image looks at.
 #
-# Sprint 13 (audit C-list item 21): per-route Lua opt-out. Cacheable / static
+# (audit C-list item 21): per-route Lua opt-out. Cacheable / static
 # / health endpoints don't benefit from ML scoring and shouldn't pay its
 # 5 ms budget. We skip the Lua dispatch on these paths via dedicated
 # `location` blocks that don't include `access_by_lua_file`.
@@ -26,7 +26,7 @@ server {
     #      at template-render time. Default 1.0 = never block.
     set $ml_block_threshold "${ML_BLOCK_THRESHOLD}";
 
-    # ── Per-route Lua opt-out (Sprint 13, ADR-0010 follow-up) ─────────
+    # ── Per-route Lua opt-out (this release, ADR-0010 follow-up) ─────────
     # WHY: these paths are cacheable / health-pings / asset fetches.
     #      Running the Lua subrequest on them buys nothing and burns
     #      both the 5 ms ML budget and ml-service capacity.

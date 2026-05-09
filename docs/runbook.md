@@ -83,7 +83,7 @@ docker compose up -d ml-service
 numeric scores within 30 s (cache TTL).
 
 **Postmortem hook.** If this happened in production, write the cause
-into `docs/sprints/<current>-summary.md` and consider a
+into ``CHANGELOG.md`` and consider a
 `make smoke-ml` target that pings `/healthz` separately.
 
 ---
@@ -120,7 +120,7 @@ Open the JSON; the `features` array is sorted by level. Look at:
 
 **Verify.** `make drift-check` should now return `clean` or `warn`.
 
-**Postmortem hook.** Sprint 13+ adds a scheduled drift worker; until
+**Postmortem hook.** future release adds a scheduled drift worker; until
 then this is a manual cron / on-call duty.
 
 ---
@@ -211,7 +211,7 @@ docker compose up -d redis
 
 - Operator option A: wait 60 s. The bucket drains on its own.
 - Operator option B: bounce the backend container — the in-process
-  counter is wiped on restart (Sprint-12 limitation; Sprint-13+ moves
+  counter is wiped on restart (known limitation; future release moves
   the counter to Redis):
 
   ```bash
@@ -281,7 +281,7 @@ materialize the deletion.
 
 ## 9. Backup / restore (planned procedure, not yet automated)
 
-**WHY this is in the runbook.** Sprint 13 backlog has `make backup` /
+**WHY this is in the runbook.**  backlog has `make backup` /
 `make restore`; until then, the steps below are the manual procedure
 the operator runs.
 
@@ -321,4 +321,4 @@ These come up at the course-project review; pre-cached answers:
 ---
 
 Last updated: v1.0.0 release. See `CHANGELOG.md` for what changed and
-`docs/sprints/` for sprint-by-sprint context.
+`docs/` for per-release context.

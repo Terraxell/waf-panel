@@ -12,7 +12,7 @@ services:
 
   # ── Protective layer — nginx + ModSecurity v3 + OWASP CRS v4. ────
   # WHY: `build:` over `image:` so PROXY_FLAVOR_DOCKERFILE can swap to
-  #      Dockerfile.openresty for Sprint 9 Lua subrequest. Default
+  #      Dockerfile.openresty for  Lua subrequest. Default
   #      Dockerfile is a thin pass-through to the upstream CRS image.
   proxy:
     <<: *defaults
@@ -183,7 +183,7 @@ services:
       timeout: 3s
       retries: 5
 
-  # ── ml-service — online inference (Sprint 8). ───────────────────
+  # ── ml-service — online inference . ───────────────────
   # WHY: lives in its own container so sklearn/xgboost don't bloat the
   #      gateway image. Mounts the active model dir read-only; the
   #      backend talks to it over HTTP and fails open on timeout.

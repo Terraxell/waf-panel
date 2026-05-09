@@ -1,4 +1,4 @@
-"""Seed default admin user — Sprint 14 hotfix.
+"""Seed default admin user — fix.
 
 Revision ID: 0003
 Revises: 0002
@@ -30,7 +30,7 @@ the migration:
    This is acceptable for a dev/course-project default. Production
    deployments must change it on first login (or override via
    `BOOTSTRAP_ADMIN_PASSWORD` once we add CLI support — out of scope
-   for this hotfix; tracked as Sprint 14 follow-up).
+   for this hotfix; tracked as  follow-up).
 
 The hash below is the same one used in ``backend/tests/conftest.py``
 (``ADMIN_PASSWORD_HASH``) so test fixtures and a fresh deploy share

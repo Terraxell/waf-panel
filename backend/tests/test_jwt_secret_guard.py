@@ -1,6 +1,6 @@
 """Production-startup guard — refuse default JWT_SECRET in prod.
 
-WHY: Sprint 11 hotfix. The audit caught "default admin / default
+WHY: fix. The audit caught "default admin / default
 JWT secret" as the most likely silent prod-deploy footgun. We add an
 explicit startup check that fails fast with a readable message.
 """

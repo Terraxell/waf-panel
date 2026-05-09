@@ -49,7 +49,7 @@
   --radius:   0;        /* WHY: design-system rule — no radius. */
 }
 
-/* ── Dark theme — Sprint 13 (audit C17a) ──────────────────────────────
+/* ── Dark theme — (audit C17a) ──────────────────────────────
    We invert the page surface and text tokens but keep the palette
    identity intact: sage stays the muted accent, royal stays the link
    colour. The override sits on `<html data-theme="dark">` and inverts

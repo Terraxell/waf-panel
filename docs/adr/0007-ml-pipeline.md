@@ -27,11 +27,11 @@ returns a flat numeric dict. No I/O. No global state. The same module
 is imported by:
 
 - `ml.train.run` to produce training and validation matrices.
-- The Sprint-8 online inference service to vectorise live requests.
+- The the online inference service to vectorise live requests.
 - `tests/test_features.py` golden-file test that pins the exact
   output for a fixed input.
 
-Feature families are listed in the sprint plan (lengths, specials,
+Feature families are listed in the project plan (lengths, specials,
 entropy, tokens, encoding ratios, headers).
 
 ### Models
@@ -42,9 +42,9 @@ Three models, trained on the same train/val split:
   training, easy to inspect coefficients on defence.
 - **XGBoost** with `binary:logistic` objective, early stopping on
   validation log-loss. Picked as the production candidate based on
-  Sprint-7 evaluation.
+  the evaluation.
 - **Isolation Forest** trained on benign-only — provides an unsupervised
-  anomaly score that the hybrid pipeline (Sprint 9) blends with the
+  anomaly score that the hybrid pipeline  blends with the
   XGBoost score using `max(score_xgb, score_iforest_normalised)`.
 
 ### Evaluation
@@ -101,12 +101,12 @@ prod".
 
 ## Follow-ups
 
-- ADR-0008 (Sprint 8) — online inference SLO, error budget, fallbacks.
-- ADR-0009 (Sprint 9) — drift detection rules and operator UX.
+- ADR-0008  — online inference SLO, error budget, fallbacks.
+- ADR-0009  — drift detection rules and operator UX.
 
-## Addendum (post-Sprint-7 close-out)
+## Addendum (post-release close-out)
 
-After the initial Sprint-7 wrap we tightened three places to satisfy
+After the initial initial wrap we tightened three places to satisfy
 the DoD without caveats:
 
 - **CICIDS 2017 loader.** The DoD listed both CSIC 2010 *and*
@@ -115,7 +115,7 @@ the DoD without caveats:
   trainer can mix datasets. CICIDS labels are heterogeneous
   (`SSH-Patator`, `Web Attack – XSS`, etc.); we collapse anything
   ≠ `BENIGN` to `label=1` and leave per-class breakdown for
-  Sprint 9.
+  
 - **Stratified K-fold metrics.** A single 80/20 split gave one
   number per metric — fine for development, weak for CP-2. Added
   `EvalReport.metrics_cv` with mean/std over 5 stratified folds

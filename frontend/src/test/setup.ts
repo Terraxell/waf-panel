@@ -1,4 +1,4 @@
-// Vitest global setup — Sprint 12.
+// Vitest global setup .
 //
 // WHY: `@testing-library/jest-dom` registers DOM matchers (e.g.
 // `toBeInTheDocument`, `toHaveAttribute`). Doing it in setupFiles means

@@ -15,5 +15,5 @@ router = APIRouter(tags=["health"])
 @router.get("/health", response_model=HealthOut, status_code=200)
 async def health() -> HealthOut:
     # NOTE: components map is a placeholder; real readiness checks land in
-    #       Sprint 4 once we wire SQLAlchemy and Redis.
+    #        once we wire SQLAlchemy and Redis.
     return HealthOut(version=__version__, components={"api": "ok"})

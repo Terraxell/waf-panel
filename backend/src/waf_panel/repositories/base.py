@@ -51,7 +51,7 @@ class AuditRepo(Protocol):
 
 
 class MlConfigRepo(Protocol):
-    """Sprint 11 — persistent ML settings (block-mode threshold etc.)."""
+    """ — persistent ML settings (block-mode threshold etc.)."""
 
     async def get(self, key: str) -> str | None: ...
     async def set(self, key: str, value: str, *, updated_by: UUID | None = None) -> None: ...

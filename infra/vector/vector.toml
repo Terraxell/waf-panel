@@ -49,7 +49,7 @@ if err != null { ts_parsed = now() }
 
 # ModSec audit — extract dashboard fields, fill required schema slots.
 #
-# WHY all the fallbacks (Sprint 14 hotfix): different libmodsecurity
+# WHY all the fallbacks (fix): different libmodsecurity
 # builds emit the client address under different field names depending
 # on rules engine version and audit format:
 #   - "client_ip"      — newer ModSec v3 json_v2 audit format (default)

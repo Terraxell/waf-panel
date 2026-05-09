@@ -1,6 +1,6 @@
 -- score.lua — fail-open ML subrequest from access_by_lua.
 --
--- WHY: in Sprint 9 we *annotate* (header X-WAF-ML-Prob); Sprint 10 will flip
+-- WHY: in this release we *annotate* (header X-WAF-ML-Prob);  will flip
 -- the block on. Either way, the contract is:
 --   1. ML subrequest budget = 5 ms. Anything slower → fail open.
 --   2. Any non-2xx, missing body, or decode failure → fail open.
@@ -32,7 +32,7 @@ local payload = cjson.encode({
                 --      possible (ngx.req.read_body) but adds latency we
                 --      don't have in the 5 ms budget. ml-service can decide
                 --      based on path/query/UA alone in the common case;
-                --      Sprint 11 will revisit if recall suffers.
+                --       will revisit if recall suffers.
     user_agent = safe_get("http_user_agent"),
     referer = safe_get("http_referer"),
 })
@@ -56,7 +56,7 @@ if not ok or type(body) ~= "table" or body.prob == nil or body.prob == cjson.nul
     return fail_open("ml_bad_payload")
 end
 
--- Sprint 10: opt-in block-mode behind ml_block_threshold.
+-- this release: opt-in block-mode behind ml_block_threshold.
 -- Default 1.0 → never blocks. Operator lowers it after calibration.
 local threshold = tonumber(ngx.var.ml_block_threshold) or 1.0
 local prob = tonumber(body.prob) or 0.0

@@ -110,7 +110,7 @@ async def inspect(
     )
 
 
-# ── /explain — Sprint 9 ─────────────────────────────────────────────────
+# ── /explain  ─────────────────────────────────────────────────
 
 class FeatureContribution(BaseModel):
     feature: str
@@ -179,7 +179,7 @@ async def explain(
     )
 
 
-# ── /threshold — Sprint 10 (Sprint 11: backed by ml_config Postgres table) ──
+# ── /threshold  (this release: backed by ml_config Postgres table) ──
 # WHY: ADR-0011 — operator-controllable, audited, RBAC-gated, rollback-able
 # to 1.0 instantly. Storage now lives in `ml_config(key='ml_block_threshold')`
 # via MlConfigRepo so multi-replica gateways stay in sync.
@@ -263,7 +263,7 @@ async def put_threshold(
 def _reset_threshold_for_tests() -> None:
     """Test helper: snap the threshold back to 1.0 between cases.
 
-    WHY: Sprint 11 — value lives in InMemoryMlConfigRepo; we poke its
+    WHY:  — value lives in InMemoryMlConfigRepo; we poke its
     private dict directly because the helper has to be sync (pytest
     fixtures aren't async by default) and the in-memory mutation IS sync.
     """

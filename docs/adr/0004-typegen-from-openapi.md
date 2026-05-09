@@ -8,7 +8,7 @@
 
 The frontend currently keeps a hand-written copy of the API surface in
 `frontend/src/lib/types.ts`. As long as the backend was a stub it was
-fine — the contract didn't move. From Sprint 5 onward the backend is
+fine — the contract didn't move. From  onward the backend is
 growing fast (metrics, incidents, rules editor, audit log), and any
 manual sync between Pydantic models and TS types becomes a known source
 of drift.
@@ -19,7 +19,7 @@ generated from the same Pydantic models the API uses for validation.
 
 ## Decision (proposed, not yet executed)
 
-When the API surface stops moving (likely Sprint 7 once metrics +
+When the API surface stops moving (likely  once metrics +
 incidents + rules editor stabilise), introduce automatic generation of
 TypeScript types from the OpenAPI schema:
 
@@ -36,7 +36,7 @@ TypeScript types from the OpenAPI schema:
 
 ## Why not now
 
-- Sprint 5 still adds new endpoints and reshapes existing ones every
+-  still adds new endpoints and reshapes existing ones every
   day. Regenerating after each change creates noise and breaks the build
   loop.
 - Manual types in `lib/types.ts` are a few dozen lines today. The cost
@@ -66,6 +66,6 @@ TypeScript types from the OpenAPI schema:
 
 ## Follow-ups
 
-- ADR-0005 — HTTP-only cookie auth (Sprint 9).
+- ADR-0005 — HTTP-only cookie auth .
 - ADR-0006 — ClickHouse materialized views for hot dashboard queries
-  (Sprint 6).
+  .

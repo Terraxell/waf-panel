@@ -35,7 +35,7 @@ async def login(
     audit: AuditRepoDep,
     request: Request,
 ) -> TokenOut:
-    # Sprint 11 hotfix: 5 attempts per (ip, email) per 60 s.
+    # fix: 5 attempts per (ip, email) per 60 s.
     if not check_login_rate(ip=_client_ip(request), email=str(payload.email)):
         raise HTTPException(
             status.HTTP_429_TOO_MANY_REQUESTS,
