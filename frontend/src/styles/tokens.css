@@ -1,0 +1,90 @@
+/* Design tokens — direct translation of design-system.md.
+   WHY: a single source of truth keeps the panel and the future презентация
+        visually consistent. Editing tokens here updates every component. */
+
+:root {
+  /* ── colours (4-colour palette + helpers) ── */
+  --c-white:        #FAFAF7;
+  --c-white-pure:   #FFFFFF;
+  --c-black:        #0A0A0A;
+  --c-sage:         #8B9A8B;
+  --c-sage-soft:    #C8D0C5;
+  --c-royal:        #2A4DB8;
+  --c-royal-deep:   #1E3A8A;
+
+  /* ── typography ── */
+  --f-display:  "Fraunces", Georgia, serif;
+  --f-body:     "Geist", system-ui, -apple-system, sans-serif;
+  --f-mono:     "JetBrains Mono", ui-monospace, monospace;
+
+  --fs-display: 3rem;
+  --fs-h1:      2.25rem;
+  --fs-h2:      1.5rem;
+  --fs-body:    1rem;
+  --fs-small:   0.875rem;
+  --fs-mono:    0.8125rem;
+
+  --lh-tight:   1.05;
+  --lh-body:    1.6;
+  --lh-mono:    1.5;
+
+  --ls-display: -0.035em;
+  --ls-h1:      -0.02em;
+  --ls-h2:      -0.015em;
+  --ls-body:    -0.005em;
+
+  /* ── spacing scale (8px increments) ── */
+  --s-1:  0.5rem;
+  --s-2:  1rem;
+  --s-3:  1.5rem;
+  --s-4:  2rem;
+  --s-6:  3rem;
+  --s-8:  4rem;
+  --s-12: 6rem;
+  --s-16: 8rem;
+
+  /* ── borders / shadows (kept minimal per the system) ── */
+  --b-thin:   1px solid var(--c-sage-soft);
+  --b-strong: 1px solid var(--c-black);
+  --radius:   0;        /* WHY: design-system rule — no radius. */
+}
+
+/* ── Dark theme — Sprint 13 (audit C17a) ──────────────────────────────
+   We invert the page surface and text tokens but keep the palette
+   identity intact: sage stays the muted accent, royal stays the link
+   colour. The override sits on `<html data-theme="dark">` and inverts
+   only the colour family — typography, spacing, and shadow tokens are
+   unchanged.
+
+   Two design concessions:
+   1. `--c-white-pure` becomes a slightly elevated surface so cards and
+      menus still stand off from the page background.
+   2. `--c-royal` is brightened — the navy original (#2A4DB8) reads as
+      near-black against a #0F1115 page, breaking the "links look like
+      links" affordance.                                                  */
+:root[data-theme="dark"] {
+  --c-white:      #0F1115;     /* page background */
+  --c-white-pure: #14171C;     /* card / menu surface (slightly elevated) */
+  --c-black:      #EAEAE7;     /* primary text */
+  --c-sage:       #94A29A;     /* muted text — same hue family, brightened */
+  --c-sage-soft:  #2A2D33;     /* subtle borders / dividers */
+  --c-royal:      #6B8AFA;     /* link / focus accent */
+  --c-royal-deep: #5476E8;
+}
+
+/* WHY this media query: even before the user opens settings the OS
+   pref should win on a fresh install. The provider in lib/theme.tsx
+   writes `data-theme` explicitly once mounted; until then this gives
+   us the right paint on the very first frame and avoids a white flash
+   in a dark-mode OS. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --c-white:      #0F1115;
+    --c-white-pure: #14171C;
+    --c-black:      #EAEAE7;
+    --c-sage:       #94A29A;
+    --c-sage-soft:  #2A2D33;
+    --c-royal:      #6B8AFA;
+    --c-royal-deep: #5476E8;
+  }
+}

@@ -1,0 +1,69 @@
+/* Global base styles. Composes with tokens.css. */
+
+@import "./tokens.css";
+@import "./responsive.css";
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--c-white);
+  color: var(--c-black);
+  font-family: var(--f-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: var(--f-display);
+  font-weight: 400;
+  line-height: var(--lh-tight);
+  margin: 0 0 var(--s-3);
+}
+h1 { font-size: var(--fs-h1); letter-spacing: var(--ls-h1); }
+h2 { font-size: var(--fs-h2); letter-spacing: var(--ls-h2); }
+
+a {
+  color: var(--c-royal);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+a:hover { border-bottom-color: var(--c-royal); }
+a:focus-visible { outline: 2px solid var(--c-royal); outline-offset: 2px; }
+
+code, pre, kbd, samp {
+  font-family: var(--f-mono);
+  font-size: var(--fs-mono);
+  line-height: var(--lh-mono);
+}
+
+/* Mono labels — used for category tags and section markers. */
+.mono-label {
+  font-family: var(--f-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--c-sage);
+}
+
+/* Layout helpers — a single column with a soft max-width, no grid framework. */
+.page {
+  max-width: 1080px;
+  padding: var(--s-6) var(--s-4);
+  margin: 0 auto;
+}
+.stack > * + * { margin-top: var(--s-3); }
+.row { display: flex; gap: var(--s-3); align-items: center; }
+
+/* Hide visually but keep accessible (used for skip-links etc.). */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0);
+  white-space: nowrap; border: 0;
+}

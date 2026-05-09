@@ -1,0 +1,75 @@
+# --- environment ---
+.env
+.env.local
+*.local
+
+# --- python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+.coverage.*
+
+# --- node ---
+node_modules/
+dist/
+.vite/
+.turbo/
+
+# --- editors ---
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# --- os ---
+.DS_Store
+Thumbs.db
+
+# --- docker / data ---
+volumes/
+*.pid
+*.log
+clickhouse-data/
+postgres-data/
+redis-data/
+
+# --- ml artefacts ---
+# WHY ml/models/ wholesale: trained models (.pkl) and per-version
+# metadata (.json) live in subdirs like ml/models/v20260509T123128/
+# and ml/models/active/. The previous rules only matched direct
+# children, leaking model blobs into git. Anyone can regenerate them
+# with `make train` (deterministic on the synthetic dataset).
+ml/models/
+ml/datasets/raw/
+ml/datasets/processed/
+
+# --- build / generated ---
+build/
+*.egg
+.pdm-python
+
+# --- vendored at build time, not committed ---
+# WHY: ml-service/Dockerfile expects a copy of waf_ml/ next to itself
+# (one source of truth for featurizer). dev.ps1 / Makefile re-syncs it
+# from ml/src/waf_ml/ before each build. Committing the copy would
+# create two-source drift the moment someone edits one but not the other.
+ml-service/waf_ml/
+
+# --- course-project deliverables (kept local, not published) ---
+# WHY: the .docx / .pdf plan is the academic deliverable for the
+# university — it carries personal info (author, group, supervisor)
+# and uses the IEML brand. The public GitHub repo is the engineering
+# portfolio; the academic artefact lives separately. Anyone who needs
+# both can check out the private course-project repo.
+План_курсового_проекта_WAF.docx
+План_курсового_проекта_WAF.pdf
+
+# scratch error captures (never committed)
+ml/err.txt
+*.err.txt

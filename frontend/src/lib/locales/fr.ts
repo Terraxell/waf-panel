@@ -1,0 +1,141 @@
+// Français — type-checked against EN source-of-truth (../en.ts).
+//
+// WHY: `EnDict` ensures every English key has a French counterpart;
+// missing or extra keys are a TypeScript build error, not a silent
+// English fallback at runtime.
+
+import type { EnDict } from "./en";
+
+export const fr: EnDict = {
+  // ── Shell / nav ────────────────────────────────────────────────
+  "nav.dashboard": "Tableau de bord",
+  "nav.incidents": "Incidents",
+  "nav.rules": "Règles",
+  "nav.audit": "Audit",
+  "nav.logout": "Se déconnecter",
+  "shell.lang_label": "Langue",
+  "shell.theme.label": "Thème",
+  "shell.theme.light": "Clair",
+  "shell.theme.dark": "Sombre",
+  "shell.theme.auto": "Auto",
+
+  // ── Login ──────────────────────────────────────────────────────
+  "login.kicker": "waf-panel · connexion",
+  "login.title": "Gestion du WAF",
+  "login.hint": "Connectez-vous pour voir les incidents, les règles et le journal. Admin par défaut : {email} / {password}.",
+  "login.email_label": "E-MAIL",
+  "login.password_label": "MOT DE PASSE",
+  "login.submit": "Se connecter",
+  "login.error_bad_creds": "E-mail ou mot de passe incorrect",
+  "login.error_generic": "Erreur de connexion",
+  "login.error_throttled": "Trop de tentatives. Réessayez dans une minute.",
+
+  // ── Dashboard ──────────────────────────────────────────────────
+  "dashboard.kicker": "vue d’ensemble",
+  "dashboard.title": "État de la pile",
+  "dashboard.hint": "Dernières 24 heures depuis ClickHouse, actualisé toutes les 30 secondes.",
+  "dashboard.card.user": "UTILISATEUR ACTUEL",
+  "dashboard.card.requests": "REQUÊTES 24H",
+  "dashboard.card.requests_total": "au total",
+  "dashboard.card.blocked": "BLOQUÉES 24H",
+  "dashboard.card.blocked_share": "{percent} % du trafic",
+  "dashboard.card.unique_ips": "IPS UNIQUES 24H",
+  "dashboard.card.unique_ips_total": "sources",
+  "dashboard.card.rules": "RÈGLES",
+  "dashboard.card.rules_total": "règles personnalisées au total",
+  "dashboard.card.ml_model": "MODÈLE ML",
+  "dashboard.card.ml_model_inactive": "non activé",
+  "dashboard.timeseries_label": "RPS ET BLOCAGES — DERNIÈRE HEURE",
+  "dashboard.top_attacks_label": "TOP ATTAQUES — 24H",
+  "dashboard.top_attacks_empty": "Aucune attaque enregistrée pour cette période.",
+
+  // ── Incidents ──────────────────────────────────────────────────
+  "incidents.kicker": "journal",
+  "incidents.title": "Incidents",
+  "incidents.hint": "Requêtes bloquées par les règles CRS. Source : ClickHouse traffic_log.",
+  "incidents.range_1h": "1H",
+  "incidents.range_24h": "24H",
+  "incidents.range_7d": "7J",
+  "incidents.ip_label": "IP",
+  "incidents.ip_placeholder": "p. ex. 10.0.0.1",
+  "incidents.method_label": "MÉTHODE",
+  "incidents.method_placeholder": "GET / POST",
+  "incidents.only_blocked": "bloquées uniquement",
+  "incidents.apply": "Appliquer",
+  "incidents.loading": "Chargement…",
+  "incidents.error": "Impossible de charger les incidents.",
+  "incidents.col.time": "Heure",
+  "incidents.col.type": "Type",
+  "incidents.col.ip": "IP",
+  "incidents.col.method": "Méthode",
+  "incidents.col.path": "Chemin",
+  "incidents.col.status": "Statut",
+  "incidents.col.ml": "ML",
+  "incidents.empty": "Aucun incident trouvé pour cette période.",
+
+  // ── Rules ──────────────────────────────────────────────────────
+  "rules.kicker": "règles",
+  "rules.title": "Éditeur de règles",
+  "rules.hint": "Les règles personnalisées sont stockées dans PostgreSQL et synchronisées avec ModSecurity en Sprint 8. Les règles CRS (sourcetype=crs) sont fournies avec l’image.",
+  "rules.create_button": "Nouvelle règle",
+  "rules.loading": "Chargement…",
+  "rules.error": "Impossible de charger les règles.",
+  "rules.col.key": "Clé",
+  "rules.col.source": "Source",
+  "rules.col.severity": "Sévérité",
+  "rules.col.action": "Action",
+  "rules.col.description": "Description",
+  "rules.col.status": "Statut",
+  "rules.empty": "Aucune règle personnalisée créée.",
+  "rules.row.enabled": "activée",
+  "rules.row.disabled": "désactivée",
+  "rules.row.delete": "Supprimer",
+  "rules.editor.kicker": "nouvelle règle",
+  "rules.editor.title": "Créer une règle personnalisée",
+  "rules.editor.key_label": "CLÉ",
+  "rules.editor.description_label": "DESCRIPTION",
+  "rules.editor.enable_now": "activer immédiatement après l’enregistrement",
+  "rules.editor.save": "Enregistrer",
+  "rules.editor.cancel": "Annuler",
+
+  // ── Audit ──────────────────────────────────────────────────────
+  "audit.kicker": "journal",
+  "audit.title": "Piste d’audit",
+  "audit.hint": "Journal append-only. Toute mutation sur les règles, modèles et utilisateurs y laisse une trace.",
+  "audit.filter_label": "FILTRER PAR ACTION",
+  "audit.filter_placeholder": "p. ex. rule. ou auth.login",
+  "audit.loading": "Chargement…",
+  "audit.error": "Impossible de charger l’audit.",
+  "audit.col.time": "Heure",
+  "audit.col.action": "Action",
+  "audit.col.target": "Cible",
+  "audit.col.actor": "Acteur",
+  "audit.empty": "Aucune entrée pour cette période.",
+
+  // ── ML threshold slider ────────────────────────────────────────
+  "ml.threshold.kicker": "ml block-mode",
+  "ml.threshold.title": "Seuil de blocage",
+  "ml.threshold.loading": "Chargement du seuil ML…",
+  "ml.threshold.off": "Mode blocage désactivé (annotate-only). Abaissez le seuil sous 1.0 pour l’activer.",
+  "ml.threshold.on": "Mode blocage actif : les requêtes avec prob ≥ {value} recevront 403.",
+  "ml.threshold.apply": "Appliquer",
+  "ml.threshold.rollback": "Restaurer (θ = 1.0)",
+  "ml.threshold.admin_only": "Le changement de seuil est réservé à l’administrateur.",
+  "ml.threshold.error": "Impossible de mettre à jour le seuil : {message}",
+
+  // ── ML badge tooltip ───────────────────────────────────────────
+  "ml.badge.unavailable": "ML indisponible : {reason}",
+  "ml.badge.no_response": "pas de réponse",
+  "ml.badge.prob": "prob = {value}",
+  "ml.badge.model": "modèle : {name}",
+  "ml.badge.cache_hit": "hit du cache",
+  "ml.badge.contributors": "contributeurs :",
+
+  // ── Search + pagination (Sprint 12) ────────────────────────────
+  "incidents.search_label": "RECHERCHE",
+  "incidents.search_placeholder": "par IP / chemin",
+  "incidents.load_more": "Charger plus",
+  "audit.search_label": "RECHERCHE",
+  "audit.search_placeholder": "par target / payload",
+  "audit.load_more": "Charger plus",
+};

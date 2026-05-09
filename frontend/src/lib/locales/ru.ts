@@ -1,0 +1,141 @@
+// Russian dictionary — type-checked against the EN source-of-truth.
+//
+// WHY: `EnDict` ensures every key from en.ts has a Russian counterpart;
+// missing or extra keys are a TypeScript build error, not a silent
+// English fallback at runtime.
+
+import type { EnDict } from "./en";
+
+export const ru: EnDict = {
+  // ── Shell / nav ────────────────────────────────────────────────
+  "nav.dashboard": "Дашборд",
+  "nav.incidents": "Инциденты",
+  "nav.rules": "Правила",
+  "nav.audit": "Аудит",
+  "nav.logout": "Выйти",
+  "shell.lang_label": "Язык",
+  "shell.theme.label": "Тема",
+  "shell.theme.light": "Светлая",
+  "shell.theme.dark": "Тёмная",
+  "shell.theme.auto": "Авто",
+
+  // ── Login ──────────────────────────────────────────────────────
+  "login.kicker": "waf-panel · вход",
+  "login.title": "Управление WAF",
+  "login.hint": "Войдите, чтобы видеть инциденты, правила и журнал. По умолчанию администратор: {email} / {password}.",
+  "login.email_label": "EMAIL",
+  "login.password_label": "ПАРОЛЬ",
+  "login.submit": "Войти",
+  "login.error_bad_creds": "Неверная пара логин/пароль",
+  "login.error_generic": "Ошибка входа",
+  "login.error_throttled": "Слишком много попыток. Попробуйте через минуту.",
+
+  // ── Dashboard ──────────────────────────────────────────────────
+  "dashboard.kicker": "обзор",
+  "dashboard.title": "Состояние стенда",
+  "dashboard.hint": "Данные — за последние 24 часа из ClickHouse, обновление каждые 30 секунд.",
+  "dashboard.card.user": "ТЕКУЩИЙ ПОЛЬЗОВАТЕЛЬ",
+  "dashboard.card.requests": "ЗАПРОСЫ 24Ч",
+  "dashboard.card.requests_total": "всего",
+  "dashboard.card.blocked": "ЗАБЛОКИРОВАНО 24Ч",
+  "dashboard.card.blocked_share": "{percent} % от потока",
+  "dashboard.card.unique_ips": "УНИКАЛЬНЫХ IP 24Ч",
+  "dashboard.card.unique_ips_total": "источников",
+  "dashboard.card.rules": "ПРАВИЛА",
+  "dashboard.card.rules_total": "всего custom-правил",
+  "dashboard.card.ml_model": "ML-МОДЕЛЬ",
+  "dashboard.card.ml_model_inactive": "не активирована",
+  "dashboard.timeseries_label": "RPS И БЛОКИРОВКИ ЗА ПОСЛЕДНИЙ ЧАС",
+  "dashboard.top_attacks_label": "TOP-АТАКИ ЗА 24Ч",
+  "dashboard.top_attacks_empty": "Атак за период не зафиксировано.",
+
+  // ── Incidents ──────────────────────────────────────────────────
+  "incidents.kicker": "журнал",
+  "incidents.title": "Инциденты",
+  "incidents.hint": "Запросы, заблокированные правилами CRS. Источник: ClickHouse traffic_log.",
+  "incidents.range_1h": "1Ч",
+  "incidents.range_24h": "24Ч",
+  "incidents.range_7d": "7Д",
+  "incidents.ip_label": "IP",
+  "incidents.ip_placeholder": "напр. 10.0.0.1",
+  "incidents.method_label": "МЕТОД",
+  "incidents.method_placeholder": "GET / POST",
+  "incidents.only_blocked": "только заблокированные",
+  "incidents.apply": "Применить",
+  "incidents.loading": "Загружается…",
+  "incidents.error": "Не удалось загрузить инциденты.",
+  "incidents.col.time": "Время",
+  "incidents.col.type": "Тип",
+  "incidents.col.ip": "IP",
+  "incidents.col.method": "Метод",
+  "incidents.col.path": "Путь",
+  "incidents.col.status": "Статус",
+  "incidents.col.ml": "ML",
+  "incidents.empty": "За период инцидентов не найдено.",
+
+  // ── Rules ──────────────────────────────────────────────────────
+  "rules.kicker": "правила",
+  "rules.title": "Конструктор правил",
+  "rules.hint": "Custom-правила хранятся в PostgreSQL и в Sprint 8 синхронизируются в ModSecurity. CRS-правила (sourcetype=crs) поставляются образом.",
+  "rules.create_button": "Создать правило",
+  "rules.loading": "Загружается…",
+  "rules.error": "Не удалось получить список правил.",
+  "rules.col.key": "Ключ",
+  "rules.col.source": "Источник",
+  "rules.col.severity": "Severity",
+  "rules.col.action": "Действие",
+  "rules.col.description": "Описание",
+  "rules.col.status": "Статус",
+  "rules.empty": "Custom-правила ещё не созданы.",
+  "rules.row.enabled": "включено",
+  "rules.row.disabled": "выключено",
+  "rules.row.delete": "Удалить",
+  "rules.editor.kicker": "новое правило",
+  "rules.editor.title": "Создание custom-правила",
+  "rules.editor.key_label": "КЛЮЧ",
+  "rules.editor.description_label": "ОПИСАНИЕ",
+  "rules.editor.enable_now": "включить сразу после сохранения",
+  "rules.editor.save": "Сохранить",
+  "rules.editor.cancel": "Отмена",
+
+  // ── Audit ──────────────────────────────────────────────────────
+  "audit.kicker": "журнал",
+  "audit.title": "Аудит действий",
+  "audit.hint": "Append-only журнал. Любая мутация правил, моделей и пользователей оставляет здесь след.",
+  "audit.filter_label": "ФИЛЬТР ПО ДЕЙСТВИЮ",
+  "audit.filter_placeholder": "напр. rule. или auth.login",
+  "audit.loading": "Загружается…",
+  "audit.error": "Не удалось загрузить аудит.",
+  "audit.col.time": "Время",
+  "audit.col.action": "Действие",
+  "audit.col.target": "Цель",
+  "audit.col.actor": "Актор",
+  "audit.empty": "Нет записей за период.",
+
+  // ── ML threshold slider ────────────────────────────────────────
+  "ml.threshold.kicker": "ml block-mode",
+  "ml.threshold.title": "Порог блокировки",
+  "ml.threshold.loading": "Загрузка порога ML…",
+  "ml.threshold.off": "Block-mode выключен (annotate-only). Опустите порог ниже 1.0, чтобы включить.",
+  "ml.threshold.on": "Block-mode включён: запросы с prob ≥ {value} будут получать 403.",
+  "ml.threshold.apply": "Применить",
+  "ml.threshold.rollback": "Откатить (θ = 1.0)",
+  "ml.threshold.admin_only": "Изменение порога доступно только администратору.",
+  "ml.threshold.error": "Не удалось обновить порог: {message}",
+
+  // ── ML badge tooltip ───────────────────────────────────────────
+  "ml.badge.unavailable": "ML недоступен: {reason}",
+  "ml.badge.no_response": "нет ответа",
+  "ml.badge.prob": "prob = {value}",
+  "ml.badge.model": "модель: {name}",
+  "ml.badge.cache_hit": "кэш-хит",
+  "ml.badge.contributors": "вклад:",
+
+  // ── Search + pagination (Sprint 12) ────────────────────────────
+  "incidents.search_label": "ПОИСК",
+  "incidents.search_placeholder": "по IP / пути",
+  "incidents.load_more": "Показать ещё",
+  "audit.search_label": "ПОИСК",
+  "audit.search_placeholder": "по target / payload",
+  "audit.load_more": "Показать ещё",
+};

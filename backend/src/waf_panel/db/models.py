@@ -1,0 +1,187 @@
+"""ORM models — one-to-one with infra/postgres/init.sql.
+
+WHY: keeping the SQLAlchemy metadata as a faithful mirror of the bootstrap
+     SQL means alembic can autogenerate migrations cleanly and the team has
+     a single source of truth for column types.
+NOTE: server-side defaults (`gen_random_uuid()`, `now()`) are declared with
+      `text()` so the database — not Python — picks the value. This makes
+      INSERTs cheaper and keeps clocks consistent across processes.
+"""
+
+from __future__ import annotations
+
+from datetime import datetime
+from uuid import UUID
+
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    text,
+)
+from sqlalchemy.dialects.postgresql import INET, JSONB
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from .base import Base
+
+# WHY: PostgreSQL CITEXT lives in an extension. We expose it as a TEXT-typed
+#      column on the ORM side; the DB enforces the case-insensitive uniqueness.
+EmailColumn = String(320)
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    email: Mapped[str] = mapped_column(EmailColumn, unique=True, nullable=False)
+    password_hash: Mapped[str] = mapped_column(Text, nullable=False)
+    role: Mapped[str] = mapped_column(String(16), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    __table_args__ = (
+        CheckConstraint("role IN ('admin', 'analyst', 'viewer')", name="users_role_check"),
+    )
+
+
+class Rule(Base):
+    __tablename__ = "rules"
+
+    id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    rule_key: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    source: Mapped[str] = mapped_column(String(16), nullable=False)
+    severity: Mapped[int] = mapped_column(Integer, nullable=False)
+    action: Mapped[str] = mapped_column(String(16), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_by: Mapped[UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL")
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+
+    creator: Mapped[User | None] = relationship("User", lazy="joined", foreign_keys=[created_by])
+
+    __table_args__ = (
+        CheckConstraint("source IN ('crs', 'custom', 'ml')", name="rules_source_check"),
+        CheckConstraint("severity BETWEEN 1 AND 5", name="rules_severity_check"),
+        CheckConstraint("action IN ('block', 'log', 'challenge')", name="rules_action_check"),
+        Index("rules_source_idx", "source"),
+        Index("rules_enabled_idx", "enabled"),
+    )
+
+
+class MLModel(Base):
+    __tablename__ = "ml_models"
+
+    id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    version: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    algo: Mapped[str] = mapped_column(String(64), nullable=False)
+    trained_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    dataset: Mapped[str] = mapped_column(Text, nullable=False)
+    metrics: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    artifact_path: Mapped[str] = mapped_column(Text, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+
+class Incident(Base):
+    __tablename__ = "incidents"
+
+    id: Mapped[UUID] = mapped_column(
+        PG_UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    ts: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+    request_id: Mapped[str] = mapped_column(Text, nullable=False)
+    rule_id: Mapped[UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("rules.id", ondelete="SET NULL")
+    )
+    model_id: Mapped[UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("ml_models.id", ondelete="SET NULL")
+    )
+    decision: Mapped[str] = mapped_column(String(16), nullable=False)
+    severity: Mapped[int] = mapped_column(Integer, nullable=False)
+    score_ml: Mapped[float | None] = mapped_column()
+    ip: Mapped[str | None] = mapped_column(INET)
+    method: Mapped[str | None] = mapped_column(String(16))
+    path: Mapped[str | None] = mapped_column(Text)
+    payload: Mapped[dict | None] = mapped_column(JSONB)
+
+    __table_args__ = (
+        CheckConstraint(
+            "decision IN ('block', 'log', 'challenge')", name="incidents_decision_check"
+        ),
+        CheckConstraint("severity BETWEEN 1 AND 5", name="incidents_severity_check"),
+        Index("incidents_ts_idx", "ts"),
+        Index("incidents_ip_idx", "ip"),
+        Index("incidents_dec_idx", "decision"),
+    )
+
+
+class AuditLog(Base):
+    __tablename__ = "audit_log"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    ts: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
+    )
+    actor_id: Mapped[UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL")
+    )
+    action: Mapped[str] = mapped_column(String(64), nullable=False)
+    target: Mapped[str] = mapped_column(String(128), nullable=False)
+    payload: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict, server_default=text("'{}'::jsonb"))
+
+    __table_args__ = (
+        Index("audit_log_ts_idx", "ts"),
+        Index("audit_log_actor_idx", "actor_id"),
+    )
+
+
+class MlConfig(Base):
+    """Sprint 11 — one row per operator-controllable ML setting.
+
+    WHY: Sprint 10 stored the block-mode threshold in process memory;
+    multi-replica gateways need persistence and an audit trail. This
+    table is intentionally generic key/value so future settings (drift
+    cadence, alert routing) reuse the same plumbing.
+
+    SAFETY: ``value_text`` is canonical. Numeric / bool consumers parse
+    it themselves so we don't have a typed-column zoo every new setting.
+    """
+
+    __tablename__ = "ml_config"
+
+    key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    value_text: Mapped[str] = mapped_column(Text, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=text("now()"),
+    )
+    updated_by: Mapped[UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"),
+    )
+
+
+__all__ = ["AuditLog", "Incident", "MLModel", "MlConfig", "Rule", "User"]

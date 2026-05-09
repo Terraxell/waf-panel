@@ -1,0 +1,141 @@
+// Deutsch — type-checked against EN source-of-truth (../en.ts).
+//
+// WHY: `EnDict` ensures every English key has a German counterpart;
+// missing or extra keys are a TypeScript build error, not a silent
+// English fallback at runtime.
+
+import type { EnDict } from "./en";
+
+export const de: EnDict = {
+  // ── Shell / nav ────────────────────────────────────────────────
+  "nav.dashboard": "Dashboard",
+  "nav.incidents": "Vorfälle",
+  "nav.rules": "Regeln",
+  "nav.audit": "Audit",
+  "nav.logout": "Abmelden",
+  "shell.lang_label": "Sprache",
+  "shell.theme.label": "Design",
+  "shell.theme.light": "Hell",
+  "shell.theme.dark": "Dunkel",
+  "shell.theme.auto": "Auto",
+
+  // ── Login ──────────────────────────────────────────────────────
+  "login.kicker": "waf-panel · anmeldung",
+  "login.title": "WAF-Verwaltung",
+  "login.hint": "Melden Sie sich an, um Vorfälle, Regeln und das Audit-Log zu sehen. Standard-Admin: {email} / {password}.",
+  "login.email_label": "E-MAIL",
+  "login.password_label": "PASSWORT",
+  "login.submit": "Anmelden",
+  "login.error_bad_creds": "Falsche E-Mail oder Passwort",
+  "login.error_generic": "Anmeldefehler",
+  "login.error_throttled": "Zu viele Versuche. Bitte in einer Minute erneut versuchen.",
+
+  // ── Dashboard ──────────────────────────────────────────────────
+  "dashboard.kicker": "übersicht",
+  "dashboard.title": "Stack-Status",
+  "dashboard.hint": "Letzte 24 Stunden aus ClickHouse, Aktualisierung alle 30 Sekunden.",
+  "dashboard.card.user": "AKTUELLER BENUTZER",
+  "dashboard.card.requests": "ANFRAGEN 24H",
+  "dashboard.card.requests_total": "insgesamt",
+  "dashboard.card.blocked": "BLOCKIERT 24H",
+  "dashboard.card.blocked_share": "{percent} % des Verkehrs",
+  "dashboard.card.unique_ips": "EINDEUTIGE IPS 24H",
+  "dashboard.card.unique_ips_total": "Quellen",
+  "dashboard.card.rules": "REGELN",
+  "dashboard.card.rules_total": "Custom-Regeln insgesamt",
+  "dashboard.card.ml_model": "ML-MODELL",
+  "dashboard.card.ml_model_inactive": "nicht aktiviert",
+  "dashboard.timeseries_label": "RPS UND BLOCKIERUNGEN — LETZTE STUNDE",
+  "dashboard.top_attacks_label": "TOP-ANGRIFFE — 24H",
+  "dashboard.top_attacks_empty": "Keine Angriffe in diesem Zeitraum erfasst.",
+
+  // ── Incidents ──────────────────────────────────────────────────
+  "incidents.kicker": "log",
+  "incidents.title": "Vorfälle",
+  "incidents.hint": "Durch CRS-Regeln blockierte Anfragen. Quelle: ClickHouse traffic_log.",
+  "incidents.range_1h": "1Std",
+  "incidents.range_24h": "24Std",
+  "incidents.range_7d": "7T",
+  "incidents.ip_label": "IP",
+  "incidents.ip_placeholder": "z. B. 10.0.0.1",
+  "incidents.method_label": "METHODE",
+  "incidents.method_placeholder": "GET / POST",
+  "incidents.only_blocked": "nur blockierte",
+  "incidents.apply": "Anwenden",
+  "incidents.loading": "Wird geladen…",
+  "incidents.error": "Vorfälle konnten nicht geladen werden.",
+  "incidents.col.time": "Zeit",
+  "incidents.col.type": "Typ",
+  "incidents.col.ip": "IP",
+  "incidents.col.method": "Methode",
+  "incidents.col.path": "Pfad",
+  "incidents.col.status": "Status",
+  "incidents.col.ml": "ML",
+  "incidents.empty": "Keine Vorfälle in diesem Zeitraum gefunden.",
+
+  // ── Rules ──────────────────────────────────────────────────────
+  "rules.kicker": "regeln",
+  "rules.title": "Regel-Editor",
+  "rules.hint": "Custom-Regeln werden in PostgreSQL gespeichert und in Sprint 8 mit ModSecurity synchronisiert. CRS-Regeln (sourcetype=crs) werden mit dem Image geliefert.",
+  "rules.create_button": "Neue Regel",
+  "rules.loading": "Wird geladen…",
+  "rules.error": "Regelliste konnte nicht geladen werden.",
+  "rules.col.key": "Schlüssel",
+  "rules.col.source": "Quelle",
+  "rules.col.severity": "Schweregrad",
+  "rules.col.action": "Aktion",
+  "rules.col.description": "Beschreibung",
+  "rules.col.status": "Status",
+  "rules.empty": "Noch keine Custom-Regeln erstellt.",
+  "rules.row.enabled": "aktiviert",
+  "rules.row.disabled": "deaktiviert",
+  "rules.row.delete": "Löschen",
+  "rules.editor.kicker": "neue regel",
+  "rules.editor.title": "Custom-Regel erstellen",
+  "rules.editor.key_label": "SCHLÜSSEL",
+  "rules.editor.description_label": "BESCHREIBUNG",
+  "rules.editor.enable_now": "sofort nach dem Speichern aktivieren",
+  "rules.editor.save": "Speichern",
+  "rules.editor.cancel": "Abbrechen",
+
+  // ── Audit ──────────────────────────────────────────────────────
+  "audit.kicker": "log",
+  "audit.title": "Audit-Trail",
+  "audit.hint": "Append-only-Log. Jede Mutation an Regeln, Modellen und Benutzern hinterlässt hier eine Spur.",
+  "audit.filter_label": "NACH AKTION FILTERN",
+  "audit.filter_placeholder": "z. B. rule. oder auth.login",
+  "audit.loading": "Wird geladen…",
+  "audit.error": "Audit-Log konnte nicht geladen werden.",
+  "audit.col.time": "Zeit",
+  "audit.col.action": "Aktion",
+  "audit.col.target": "Ziel",
+  "audit.col.actor": "Akteur",
+  "audit.empty": "Keine Einträge in diesem Zeitraum.",
+
+  // ── ML threshold slider ────────────────────────────────────────
+  "ml.threshold.kicker": "ml block-mode",
+  "ml.threshold.title": "Block-Schwellenwert",
+  "ml.threshold.loading": "ML-Schwellenwert wird geladen…",
+  "ml.threshold.off": "Block-Modus deaktiviert (annotate-only). Senken Sie den Schwellenwert unter 1.0 zum Aktivieren.",
+  "ml.threshold.on": "Block-Modus aktiv: Anfragen mit prob ≥ {value} erhalten 403.",
+  "ml.threshold.apply": "Anwenden",
+  "ml.threshold.rollback": "Zurücksetzen (θ = 1.0)",
+  "ml.threshold.admin_only": "Schwellenwertänderung ist nur für Administratoren.",
+  "ml.threshold.error": "Schwellenwert konnte nicht aktualisiert werden: {message}",
+
+  // ── ML badge tooltip ───────────────────────────────────────────
+  "ml.badge.unavailable": "ML nicht verfügbar: {reason}",
+  "ml.badge.no_response": "keine Antwort",
+  "ml.badge.prob": "prob = {value}",
+  "ml.badge.model": "Modell: {name}",
+  "ml.badge.cache_hit": "Cache-Treffer",
+  "ml.badge.contributors": "Beitrag:",
+
+  // ── Search + pagination (Sprint 12) ────────────────────────────
+  "incidents.search_label": "SUCHE",
+  "incidents.search_placeholder": "nach IP / Pfad",
+  "incidents.load_more": "Mehr laden",
+  "audit.search_label": "SUCHE",
+  "audit.search_placeholder": "nach target / payload",
+  "audit.load_more": "Mehr laden",
+};

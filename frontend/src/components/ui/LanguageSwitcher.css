@@ -1,0 +1,32 @@
+/* LanguageSwitcher — RU/EN toggle, design-system-consistent.
+ * Mirrors the .incidents__ranges segmented look so it doesn't visually
+ * stand out from the rest of the chrome.
+ */
+
+.lang-switch {
+  display: inline-flex;
+  border: 1px solid var(--border);
+}
+
+.lang-switch__btn {
+  padding: 0.35rem 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  background: transparent;
+  border: 0;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+.lang-switch__btn + .lang-switch__btn {
+  border-left: 1px solid var(--border);
+}
+
+.lang-switch__btn:hover {
+  color: var(--foreground);
+}
+
+.lang-switch__btn--active {
+  background: var(--foreground);
+  color: var(--background);
+}

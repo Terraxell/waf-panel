@@ -1,0 +1,97 @@
+.rules__head { display: flex; flex-direction: column; gap: var(--s-1); }
+.rules__hint { color: var(--c-sage); font-size: var(--fs-small); margin: 0; }
+.rules__error { color: #b03a2e; }
+
+.rules__table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--c-white-pure);
+  border: var(--b-thin);
+}
+.rules__table th, .rules__table td {
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid var(--c-sage-soft);
+  text-align: left;
+  vertical-align: top;
+}
+.rules__table th {
+  font-family: var(--f-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: var(--c-sage);
+  background: var(--c-white);
+}
+.rules__table tr:last-child td { border-bottom: 0; }
+.rules__desc { max-width: 320px; }
+.rules__action {
+  font-family: var(--f-mono);
+  font-size: 0.75rem;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid var(--c-sage-soft);
+}
+.rules__action--block  { color: #b03a2e; border-color: #b03a2e33; }
+.rules__action--log    { color: var(--c-sage); }
+.rules__action--challenge { color: var(--c-royal); border-color: #2a4db833; }
+
+.rules__empty {
+  text-align: center;
+  color: var(--c-sage);
+  padding: var(--s-4) 0;
+}
+
+/* ── Modal ─────────────────────────────────────────────────────── */
+.rules-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 10, 10, 0.45);
+  display: grid;
+  place-items: center;
+  padding: var(--s-3);
+  z-index: 50;
+}
+.rules-modal__card {
+  width: 100%;
+  max-width: 720px;
+  background: var(--c-white-pure);
+  border: var(--b-thin);
+  padding: var(--s-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+.rules-modal__row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: var(--s-2);
+}
+.rules-modal__select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.rules-modal__select select {
+  font-family: var(--f-body);
+  font-size: var(--fs-body);
+  background: transparent;
+  border: 0;
+  border-bottom: var(--b-strong);
+  padding: 0.55rem 0;
+  color: var(--c-black);
+}
+.rules-modal__editor { display: flex; flex-direction: column; gap: 0.4rem; }
+.rules-modal__editor textarea {
+  font-family: var(--f-mono);
+  font-size: var(--fs-mono);
+  line-height: var(--lh-mono);
+  color: var(--c-black);
+  background: var(--c-white);
+  border: var(--b-thin);
+  padding: var(--s-2);
+  resize: vertical;
+  min-height: 200px;
+}
+.rules-modal__check {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+}

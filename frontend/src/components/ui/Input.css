@@ -1,0 +1,26 @@
+.field { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.field__label { display: block; }
+
+.field__input {
+  font-family: var(--f-body);
+  font-size: var(--fs-body);
+  letter-spacing: var(--ls-body);
+  background: transparent;
+  color: var(--c-black);
+  border: 0;
+  border-bottom: var(--b-strong);
+  border-radius: 0;
+  padding: 0.55rem 0;
+  outline: none;
+  transition: border-color 120ms ease;
+}
+.field__input::placeholder { color: var(--c-sage); }
+.field__input:focus { border-bottom-color: var(--c-royal); }
+.field__input[aria-invalid="true"] { border-bottom-color: #b03a2e; }
+
+.field__error {
+  margin: 0;
+  color: #b03a2e;
+  font-size: var(--fs-small);
+}

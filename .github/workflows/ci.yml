@@ -1,0 +1,172 @@
+# waf-panel — continuous integration.
+#
+# WHY: a green CI badge is the single best proof that "tests pass on
+# the host" actually means "tests pass for everyone, every commit".
+# We split into independent jobs so a flaky one (e.g. xgboost wheel
+# install) doesn't gate the others.
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# WHY: cancel the in-progress run for a branch when a new commit lands;
+#      saves CI minutes during rapid iteration.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  backend:
+    name: backend (pytest + ruff)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: waf
+          POSTGRES_PASSWORD: waf_dev_only
+          POSTGRES_DB: waf_panel
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U waf -d waf_panel"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+    env:
+      JWT_SECRET: test-secret-test-secret-test
+      WAF_ENV: development
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5432"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e backend[dev]
+          pip install ruff
+      - name: ruff
+        run: ruff check backend/src backend/tests
+      - name: pytest
+        working-directory: backend
+        run: PYTHONPATH=src python -m pytest -q
+
+  ml:
+    name: ml (pytest + ruff)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ml[dev]
+          pip install ruff
+      - name: ruff
+        run: ruff check ml/src ml/tests
+      - name: pytest
+        working-directory: ml
+        run: PYTHONPATH=src python -m pytest -q
+
+  ml-service:
+    name: ml-service (pytest + ruff)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ml-service[dev]
+          # ml-service tests import waf_ml.features from the sibling repo.
+          pip install -e ml
+          pip install ruff
+      - name: ruff
+        run: ruff check ml-service/src ml-service/tests
+      - name: pytest
+        working-directory: ml-service
+        run: PYTHONPATH=src:../ml/src python -m pytest -q
+
+  bench:
+    name: bench (pytest + ruff)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: install
+        run: |
+          python -m pip install --upgrade pip
+          pip install httpx pytest ruff
+      - name: ruff
+        run: ruff check bench
+      - name: pytest
+        run: python -m pytest -q bench/tests/
+
+  frontend:
+    name: frontend (tsc + eslint + vitest + vite build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: install
+        # WHY: --include=optional so rollup pulls its Linux-musl wheels.
+        # Sprint 4 troubleshooting #6: missing optional deps break vite
+        # build on a fresh Linux runner.
+        run: npm install --include=optional
+      - name: typecheck
+        run: npx tsc --noEmit
+      - name: eslint
+        run: npx eslint "src/**/*.{ts,tsx}"
+      - name: vitest
+        run: npm run test
+      - name: vite build
+        run: npm run build
+
+  # WHY: a single aggregator the branch-protection rule can pin against;
+  # adding a new job later doesn't require touching protection settings.
+  ci-ok:
+    name: ci-ok
+    needs: [backend, ml, ml-service, bench, frontend]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: aggregate
+        run: |
+          if [ "${{ needs.backend.result }}" != "success" ] \
+             || [ "${{ needs.ml.result }}" != "success" ] \
+             || [ "${{ needs.ml-service.result }}" != "success" ] \
+             || [ "${{ needs.bench.result }}" != "success" ] \
+             || [ "${{ needs.frontend.result }}" != "success" ]; then
+            echo "one or more jobs failed"
+            exit 1
+          fi

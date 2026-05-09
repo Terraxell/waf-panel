@@ -1,0 +1,101 @@
+# OpenResty extras — only used when PROXY_FLAVOR_DOCKERFILE=Dockerfile.openresty.
+# WHY: the default `nginx-alpine` flavour does not load this file; envsubst
+# only renders templates from /etc/nginx/templates/. We mount this in compose
+# under the same path the OpenResty image looks at.
+#
+# Sprint 13 (audit C-list item 21): per-route Lua opt-out. Cacheable / static
+# / health endpoints don't benefit from ML scoring and shouldn't pay its
+# 5 ms budget. We skip the Lua dispatch on these paths via dedicated
+# `location` blocks that don't include `access_by_lua_file`.
+
+# Load the lua-resty package set baked into OpenResty.
+lua_package_path '/etc/nginx/lua/?.lua;;';
+
+# WHY: a separate upstream block lets us put the ML budget per-target without
+#      polluting the main upstream pool.
+upstream ml_service {
+    server ml-service:8001 max_fails=2 fail_timeout=5s;
+    keepalive 32;
+}
+
+server {
+    listen 8080;
+    server_name ${SERVER_NAME};
+
+    # WHY: env-driven threshold. envsubst will replace ${ML_BLOCK_THRESHOLD}
+    #      at template-render time. Default 1.0 = never block.
+    set $ml_block_threshold "${ML_BLOCK_THRESHOLD}";
+
+    # ── Per-route Lua opt-out (Sprint 13, ADR-0010 follow-up) ─────────
+    # WHY: these paths are cacheable / health-pings / asset fetches.
+    #      Running the Lua subrequest on them buys nothing and burns
+    #      both the 5 ms ML budget and ml-service capacity.
+    #
+    # SAFETY: ModSecurity still runs on every location — `modsecurity on`
+    #         is inherited from the http-level config. We're skipping the
+    #         *ML* layer, not the rule layer. CRS still inspects /static/.
+
+    # Static assets (frontend bundle, images, fonts, CSS).
+    location ~* ^/static/ {
+        modsecurity on;
+        modsecurity_rules_file /etc/nginx/modsec.d/main.conf;
+        proxy_pass http://${BACKEND};
+        # Long-cache headers on the upstream side; we just pass through.
+    }
+
+    # Browser-visible asset endpoints.
+    location = /favicon.ico {
+        modsecurity on;
+        modsecurity_rules_file /etc/nginx/modsec.d/main.conf;
+        proxy_pass http://${BACKEND};
+        access_log off;  # not interesting for the dashboard either
+    }
+    location = /robots.txt {
+        modsecurity on;
+        modsecurity_rules_file /etc/nginx/modsec.d/main.conf;
+        proxy_pass http://${BACKEND};
+        access_log off;
+    }
+
+    # Liveness / readiness — must never get gated on ML even partially,
+    # otherwise a sick ml-service blocks the platform's own healthcheck.
+    location = /__health {
+        modsecurity off;  # health probe, not user input
+        proxy_pass http://${BACKEND};
+        access_log off;
+    }
+    location = /healthz {
+        modsecurity off;
+        proxy_pass http://${BACKEND};
+        access_log off;
+    }
+    location = /readyz {
+        modsecurity off;
+        proxy_pass http://${BACKEND};
+        access_log off;
+    }
+
+    # ── Default location — full Lua dispatch ─────────────────────────
+    # WHY: every other request runs the Lua dispatcher. Block-mode flips
+    #      on when $ml_block_threshold < 1.0; otherwise annotate-only.
+    location / {
+        modsecurity on;
+        modsecurity_rules_file /etc/nginx/modsec.d/main.conf;
+        access_by_lua_file /etc/nginx/lua/score.lua;
+        proxy_pass http://${BACKEND};
+    }
+
+    # Internal subrequest target — reachable only from access_by_lua.
+    location = /__ml_score {
+        internal;
+        proxy_pass http://ml_service/score;
+        proxy_method POST;
+        proxy_pass_request_body on;
+        proxy_set_header Content-Type "application/json";
+        # SAFETY: 5 ms budget — block-mode SLO. Read+connect timeouts are
+        #         both clipped because nginx adds them.
+        proxy_connect_timeout 2ms;
+        proxy_read_timeout    5ms;
+        proxy_send_timeout    2ms;
+    }
+}

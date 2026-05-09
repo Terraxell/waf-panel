@@ -1,0 +1,244 @@
+# waf-panel — local development stack.
+# WHY: a single compose file is the artefact graded under "развёртывание"
+#      (методичка, раздел 5.7). Each service has a one-line reason-to-exist.
+
+name: waf-panel
+
+x-defaults: &defaults
+  restart: unless-stopped
+  networks: [wafnet]
+
+services:
+
+  # ── Protective layer — nginx + ModSecurity v3 + OWASP CRS v4. ────
+  # WHY: `build:` over `image:` so PROXY_FLAVOR_DOCKERFILE can swap to
+  #      Dockerfile.openresty for Sprint 9 Lua subrequest. Default
+  #      Dockerfile is a thin pass-through to the upstream CRS image.
+  proxy:
+    <<: *defaults
+    build:
+      context: .
+      dockerfile: ./proxy/${PROXY_FLAVOR_DOCKERFILE:-Dockerfile}
+    container_name: waf-proxy
+    user: "0:0"
+    entrypoint:
+      - sh
+      - -c
+      - |
+        mkdir -p /var/log/nginx
+        chown -R nginx:nginx /var/log /var/log/nginx
+        exec /docker-entrypoint.sh nginx -g "daemon off;"
+    depends_on:
+      dvwa: {condition: service_started}
+    environment:
+      MODSEC_RULE_ENGINE: ${MODSEC_RULE_ENGINE:-On}
+      MODSEC_AUDIT_ENGINE: "RelevantOnly"
+      MODSEC_AUDIT_LOG: "/var/log/modsec_audit.log"
+      MODSEC_AUDIT_LOG_FORMAT: "JSON"
+      MODSEC_REQ_BODY_ACCESS: "On"
+      MODSEC_RESP_BODY_ACCESS: "On"
+      PARANOIA: ${PARANOIA:-1}
+      ANOMALY_INBOUND: ${ANOMALY_INBOUND:-5}
+      ANOMALY_OUTBOUND: ${ANOMALY_OUTBOUND:-4}
+      ML_BLOCK_THRESHOLD: ${ML_BLOCK_THRESHOLD:-1.0}
+      BACKEND: "http://dvwa:80"
+      SERVER_NAME: "localhost"
+    ports:
+      - "${PROXY_PORT:-8080}:8080"
+    volumes:
+      - ./infra/nginx/templates/default.conf.template:/etc/nginx/templates/conf.d/default.conf.template:ro
+      - ./infra/nginx/modsec/overrides.conf:/etc/modsecurity.d/owasp-crs/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf:ro
+      - waf_logs:/var/log
+    healthcheck:
+      test: ["CMD", "sh", "-c", "wget -q -O- http://127.0.0.1:8080/__health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ── Target app — DVWA. Only reachable through the proxy. ────────
+  dvwa:
+    <<: *defaults
+    image: vulnerables/web-dvwa:latest
+    container_name: waf-dvwa
+    expose: ["80"]
+    healthcheck:
+      test: ["CMD", "sh", "-c", "wget -q -O- http://127.0.0.1/ >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+
+  # ── FastAPI gateway. ────────────────────────────────────────────
+  backend:
+    <<: *defaults
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: waf-backend
+    depends_on:
+      postgres:   {condition: service_healthy}
+      redis:      {condition: service_healthy}
+      clickhouse: {condition: service_healthy}
+      # WHY: ml-service is best-effort; backend fails open on timeout, so we
+      #      use service_started (not _healthy) — gateway must boot even if
+      #      no model is loaded yet.
+      ml-service: {condition: service_started}
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: ${POSTGRES_USER:-waf}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-waf_dev_only}
+      POSTGRES_DB: ${POSTGRES_DB:-waf_panel}
+      CH_HOST: clickhouse
+      CH_USER: ${CH_USER:-waf}
+      CH_PASSWORD: ${CH_PASSWORD:-waf_dev_only}
+      CH_DB: ${CH_DB:-waf_logs}
+      REDIS_URL: "redis://redis:6379/0"
+      JWT_SECRET: ${JWT_SECRET:-change_me_in_a_real_deployment}
+      JWT_TTL_MINUTES: ${JWT_TTL_MINUTES:-60}
+      ML_SERVICE_URL: ${ML_SERVICE_URL:-http://ml-service:8001}
+      ML_SERVICE_TIMEOUT_MS: ${ML_SERVICE_TIMEOUT_MS:-20}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health').status==200 else 1)"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
+
+  # ── Frontend SPA. Production build served by nginx. ─────────────
+  # WHY: the dev experience runs `npm run dev` directly on the host (port
+  #      5173). The container is what we ship to the supervisor's laptop.
+  frontend:
+    <<: *defaults
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: waf-frontend
+    depends_on:
+      backend: {condition: service_healthy}
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+
+  # ── OLTP — rules, users, incidents, audit. ──────────────────────
+  postgres:
+    <<: *defaults
+    image: postgres:16-alpine
+    container_name: waf-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-waf}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-waf_dev_only}
+      POSTGRES_DB: ${POSTGRES_DB:-waf_panel}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ── OLAP — raw HTTP traffic. ────────────────────────────────────
+  clickhouse:
+    <<: *defaults
+    image: clickhouse/clickhouse-server:24-alpine
+    container_name: waf-clickhouse
+    environment:
+      CLICKHOUSE_USER: ${CH_USER:-waf}
+      CLICKHOUSE_PASSWORD: ${CH_PASSWORD:-waf_dev_only}
+      CLICKHOUSE_DB: ${CH_DB:-waf_logs}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    ports:
+      - "${CLICKHOUSE_HTTP_PORT:-8123}:8123"
+      - "${CLICKHOUSE_NATIVE_PORT:-9000}:9000"
+    volumes:
+      - ch_data:/var/lib/clickhouse
+      - ./infra/clickhouse/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    ulimits:
+      nofile: { soft: 262144, hard: 262144 }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8123/ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ── Cache + Streams — rate-limit and ML buffer. ─────────────────
+  redis:
+    <<: *defaults
+    image: redis:7-alpine
+    container_name: waf-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ── ml-service — online inference (Sprint 8). ───────────────────
+  # WHY: lives in its own container so sklearn/xgboost don't bloat the
+  #      gateway image. Mounts the active model dir read-only; the
+  #      backend talks to it over HTTP and fails open on timeout.
+  ml-service:
+    <<: *defaults
+    build:
+      context: ./ml-service
+      dockerfile: Dockerfile
+    container_name: waf-ml-service
+    depends_on:
+      redis:    {condition: service_healthy}
+    environment:
+      ML_MODEL_DIR: /app/models
+      ML_MODEL_ALGO: ${ML_MODEL_ALGO:-xgboost}
+      ML_FALLBACK_ALGO: ${ML_FALLBACK_ALGO:-lr}
+      ML_REDIS_URL: "redis://redis:6379/2"
+      ML_REDIS_TTL_SEC: ${ML_REDIS_TTL_SEC:-30}
+      ML_USE_REGISTRY: ${ML_USE_REGISTRY:-false}
+      ML_POSTGRES_DSN: "host=postgres port=5432 user=${POSTGRES_USER:-waf} password=${POSTGRES_PASSWORD:-waf_dev_only} dbname=${POSTGRES_DB:-waf_panel}"
+    volumes:
+      # WHY: bind-mount keeps the image stateless; operators can swap
+      #      model artefacts by replacing files under ./ml/models/active.
+      - ./ml/models/active:/app/models:ro
+    ports:
+      - "${ML_SERVICE_PORT:-8001}:8001"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8001/readyz').status==200 else 1)"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
+
+  # ── Log shipper — nginx + ModSec → ClickHouse. ──────────────────
+  vector:
+    <<: *defaults
+    image: timberio/vector:0.40.0-alpine
+    container_name: waf-vector
+    command: ["--config", "/etc/vector/vector.toml"]
+    depends_on:
+      clickhouse: {condition: service_healthy}
+      proxy:      {condition: service_started}
+    environment:
+      CH_USER: ${CH_USER:-waf}
+      CH_PASSWORD: ${CH_PASSWORD:-waf_dev_only}
+      CH_DB: ${CH_DB:-waf_logs}
+    volumes:
+      - ./infra/vector/vector.toml:/etc/vector/vector.toml:ro
+      - waf_logs:/var/log:ro
+
+networks:
+  wafnet:
+    driver: bridge
+
+volumes:
+  pg_data:
+  ch_data:
+  redis_data:
+  waf_logs:

@@ -1,0 +1,47 @@
+/* Popover — small CSS-only pop above the trigger. No portal, no
+   positioning library. The trigger is the inline-block parent so the
+   absolute panel hangs from its top-left corner. */
+
+.popover {
+  position: relative;
+  display: inline-block;
+}
+
+.popover__panel {
+  /* Position above the trigger; if there isn't enough vertical room
+     the browser will let it overflow the viewport — that's fine for
+     the dashboard surface (no fixed-height containers). */
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 20;
+
+  background: var(--c-white-pure);
+  color: var(--c-black);
+  border: var(--b-thin);
+  padding: var(--s-2);
+  min-width: 14rem;
+  max-width: 22rem;
+  font-family: var(--f-mono);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  white-space: pre-wrap;       /* preserve newlines from joined strings */
+  box-shadow: 0 4px 16px rgba(10, 10, 10, 0.08);
+}
+
+/* Direct children are intentionally vertically stacked — used by
+   MlBadge so the contributors list sits below the prob/model rows. */
+.popover__panel > * + * { margin-top: 0.25rem; }
+
+/* Reduced-motion users still see the popover, but without the soft
+   fade — instant show is honestly the more accessible default here. */
+@media (prefers-reduced-motion: no-preference) {
+  .popover__panel {
+    animation: popover-fade 80ms ease-out;
+  }
+}
+
+@keyframes popover-fade {
+  from { opacity: 0; transform: translateY(2px); }
+  to   { opacity: 1; transform: translateY(0);  }
+}

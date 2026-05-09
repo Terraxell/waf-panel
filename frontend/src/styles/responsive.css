@@ -1,0 +1,104 @@
+/* Mobile-responsiveness — Sprint 13 (audit C17c).
+ *
+ * The panel was designed desktop-first (1080px container, 8-px grid).
+ * On phones the shell header overflowed, the Incidents filter grid
+ * collapsed into unreadable smashes, and tables forced the body
+ * horizontal scroll instead of letting the table itself scroll.
+ *
+ * This sheet sits at the **bottom** of base.css's import chain so the
+ * @media rules win without bumping component selector specificity.
+ *
+ * Two breakpoints:
+ *   - 920px: tablet — header wraps, page padding eases.
+ *   - 720px: phone  — filters stack, tables scroll inside their wrap.
+ */
+
+@media (max-width: 920px) {
+  .page {
+    padding: var(--s-4) var(--s-3);
+  }
+  .shell-bar {
+    flex-wrap: wrap;
+    row-gap: var(--s-2);
+  }
+  .shell-nav {
+    margin-left: 0;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+  }
+}
+
+@media (max-width: 720px) {
+  .page {
+    padding: var(--s-3) var(--s-2);
+  }
+  h1 { font-size: 1.6rem; }
+  h2 { font-size: 1.25rem; }
+
+  /* Shell — keep nav, language, theme readable as separate rows. */
+  .shell-bar {
+    align-items: flex-start;
+  }
+  .shell-link {
+    font-size: 0.75rem;
+  }
+
+  /* Dashboard cards become a single column at < 720px to avoid
+     squeezed metric strongs that wrap mid-number. */
+  .dashboard__grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Incidents / Audit filter grids — stack vertically; segmented
+     range pills still flex on a row. */
+  .incidents__filters {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+  .incidents__ranges {
+    flex-wrap: wrap;
+  }
+
+  /* Tables — wrap parent gets horizontal scroll so the table itself
+     doesn't push the page wider than the viewport. */
+  .incidents__table,
+  .audit__table,
+  .rules__table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  /* When a table becomes a block, the inner rows still need the
+     full-width grid behaviour — restore on the actual <table> via
+     a data-attribute escape if a page sets one. Default OK for now. */
+
+  .incidents__path {
+    max-width: 60vw;
+  }
+
+  /* Popover panel — clamp to the viewport so it doesn't bleed off
+     the right edge on a narrow screen. */
+  .popover__panel {
+    max-width: min(20rem, calc(100vw - 2rem));
+  }
+
+  /* Theme + language toggles — drop the uppercase tracking so the
+     buttons don't blow up on small screens. */
+  .theme-toggle__btn,
+  .lang-switch__btn {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.7rem;
+  }
+}
+
+/* Honor the user's OS-level reduced-motion preference everywhere
+   the panel uses animation (skeleton shimmer, popover fade). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

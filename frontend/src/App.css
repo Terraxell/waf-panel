@@ -1,0 +1,28 @@
+.shell-bar {
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding-bottom: var(--s-3);
+  border-bottom: var(--b-thin);
+}
+
+.shell-nav {
+  display: flex;
+  gap: var(--s-3);
+  flex: 1;
+  margin-left: var(--s-4);
+}
+
+.shell-link {
+  font-family: var(--f-mono);
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--c-sage);
+  border-bottom: 1px solid transparent;
+  padding-bottom: 0.2rem;
+}
+.shell-link.is-active {
+  color: var(--c-black);
+  border-bottom-color: var(--c-royal);
+}
+.shell-link:hover { color: var(--c-black); }

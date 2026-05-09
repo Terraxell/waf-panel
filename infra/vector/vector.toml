@@ -1,0 +1,108 @@
+# Vector pipeline: nginx access log (json) + ModSec audit log → ClickHouse.
+# WHY: VRL `parse_timestamp!()` parses strings into timestamps (Vector 0.40
+#      removed `to_timestamp!` for strings). `format_timestamp!()` then
+#      writes them out without a TZ suffix, which is what ClickHouse
+#      DateTime64(3, 'UTC') expects in JSONEachRow inserts.
+
+# ── sources ───────────────────────────────────────────────────────────
+
+[sources.nginx_access]
+type = "file"
+include = ["/var/log/nginx/access.json"]
+read_from = "beginning"
+
+[sources.modsec_audit]
+type = "file"
+include = ["/var/log/modsec_audit.log"]
+read_from = "beginning"
+
+# ── transforms ────────────────────────────────────────────────────────
+
+# nginx access — coerce schema to match traffic_log columns.
+[transforms.nginx_decode]
+type = "remap"
+inputs = ["nginx_access"]
+source = '''
+parsed = parse_json!(.message)
+
+# nginx time_iso8601 = "2026-05-08T13:57:21+00:00" (RFC3339).
+# Re-emit as "2026-05-08 13:57:21.000" — ClickHouse DateTime64 in JSONEachRow
+# accepts that without a TZ suffix and treats it as the column's UTC.
+ts_str = to_string(parsed.ts) ?? ""
+ts_parsed, err = parse_timestamp(ts_str, format: "%+")
+if err != null { ts_parsed = now() }
+.ts = format_timestamp!(ts_parsed, format: "%Y-%m-%d %H:%M:%S%.3f")
+
+.event_type = "access"
+.remote_ip = to_string(parsed.remote_ip) ?? ""
+.method = to_string(parsed.method) ?? ""
+.path = to_string(parsed.path) ?? ""
+.query = to_string(parsed.query) ?? ""
+.status, _e = to_int(parsed.status)
+.bytes, _e = to_int(parsed.bytes)
+.latency_ms, _e = to_float(parsed.latency_ms)
+.ua = to_string(parsed.ua) ?? ""
+.referer = to_string(parsed.referer) ?? ""
+.rule_ids = []
+.raw = to_string(.message) ?? ""
+'''
+
+# ModSec audit — extract dashboard fields, fill required schema slots.
+#
+# WHY all the fallbacks (Sprint 14 hotfix): different libmodsecurity
+# builds emit the client address under different field names depending
+# on rules engine version and audit format:
+#   - "client_ip"      — newer ModSec v3 json_v2 audit format (default)
+#   - "remote_address" — older v3 format and what the previous version
+#                        of this transform tried (and got empty rows for)
+# We probe both and fall back to top-level "client_ip" as a last resort.
+# Same for time_stamp: newer builds emit "time_stamp", older emit "time".
+#
+# Result: traffic_log.remote_ip is no longer empty for modsec-blocked
+# requests, which fixes both the dashboard's "unique IPs" counter and
+# AWS WAF adapter pre-conditions that filter on RFC1918 + loopback.
+[transforms.modsec_decode]
+type = "remap"
+inputs = ["modsec_audit"]
+source = '''
+parsed = parse_json!(.message)
+
+ts_str = to_string(parsed.transaction.time_stamp) ?? to_string(parsed.transaction.time) ?? ""
+ts_parsed, err = parse_timestamp(ts_str, format: "%+")
+if err != null { ts_parsed = now() }
+.ts = format_timestamp!(ts_parsed, format: "%Y-%m-%d %H:%M:%S%.3f")
+
+.event_type = "modsec"
+
+# Probe in this order — first non-empty wins.
+ip = to_string(parsed.transaction.client_ip) ?? ""
+if ip == "" { ip = to_string(parsed.transaction.remote_address) ?? "" }
+if ip == "" { ip = to_string(parsed.client_ip) ?? "" }
+.remote_ip = ip
+
+.method = to_string(parsed.transaction.request.method) ?? ""
+.path = to_string(parsed.transaction.request.uri) ?? ""
+.query = ""
+.status, _e = to_int(parsed.transaction.response.http_code)
+.bytes = 0
+.latency_ms = 0.0
+.ua = ""
+.referer = ""
+.rule_ids = []
+.raw = to_string(.message) ?? ""
+'''
+
+# ── sink ──────────────────────────────────────────────────────────────
+
+[sinks.clickhouse_traffic]
+type = "clickhouse"
+inputs = ["nginx_decode", "modsec_decode"]
+endpoint = "http://clickhouse:8123"
+database = "${CH_DB}"
+table = "traffic_log"
+auth.strategy = "basic"
+auth.user = "${CH_USER}"
+auth.password = "${CH_PASSWORD}"
+skip_unknown_fields = true
+batch.timeout_secs = 1
+batch.max_events = 500

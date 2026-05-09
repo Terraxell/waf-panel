@@ -1,0 +1,36 @@
+/* MlThresholdSlider — Sprint 10 block-mode kill-switch UI. */
+
+.ml-threshold {
+  border: 1px solid var(--border);
+  padding: 1.25rem 1.5rem;
+}
+
+.ml-threshold__hint {
+  color: var(--muted-foreground);
+  font-size: 0.9rem;
+  margin: 0.4rem 0 0 0;
+}
+
+.ml-threshold__row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.ml-threshold__row input[type="range"] {
+  flex: 1;
+  accent-color: var(--accent);
+}
+
+.ml-threshold__value {
+  font-family: var(--font-mono);
+  min-width: 3.5em;
+  text-align: right;
+  color: var(--foreground);
+}
+
+.ml-threshold__error {
+  color: #b91c1c;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}

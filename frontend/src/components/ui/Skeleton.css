@@ -1,0 +1,30 @@
+/* Skeleton — design-system-consistent shimmer placeholder.
+ * Uses var(--border) on var(--background) so it blends with chrome.
+ * @media respects reduced-motion users (no shimmer for them).
+ */
+
+.skeleton {
+  display: block;
+  background: linear-gradient(
+    90deg,
+    var(--border) 0%,
+    var(--muted-foreground, #999) 50%,
+    var(--border) 100%
+  );
+  background-size: 200% 100%;
+  opacity: 0.35;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.skeleton__group > .skeleton + .skeleton {
+  margin-top: 0.4rem;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; opacity: 0.25; }
+}

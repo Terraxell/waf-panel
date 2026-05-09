@@ -1,0 +1,78 @@
+# OpenResty + ModSecurity v3 — opt-in proxy flavour for Sprint 9 Lua subrequest.
+#
+# WHY: the default `owasp/modsecurity-crs:nginx-alpine` image ships mainline
+# nginx without `lua-nginx-module`, so calling `ngx.location.capture` from the
+# access phase is impossible. To hand block-mode (Sprint 10) a 5 ms scoring
+# budget on the request path we need OpenResty, which bundles LuaJIT + the
+# ngx_lua module out of the box.
+#
+# Trade-off: this image rebuilds libmodsecurity + ModSecurity-nginx from
+# source against OpenResty's nginx, which takes ~20 minutes the first time.
+# That's why this Dockerfile is *not* the default; operators set
+# PROXY_FLAVOR_DOCKERFILE=Dockerfile.openresty in .env to use it.
+#
+# References:
+#   - https://github.com/SpiderLabs/ModSecurity (libmodsecurity v3.x)
+#   - https://github.com/SpiderLabs/ModSecurity-nginx (connector)
+#   - https://openresty.org/en/installation.html
+
+ARG OPENRESTY_VERSION=1.25.3.1
+ARG MODSEC_VERSION=v3.0.13
+ARG CRS_VERSION=v4.10.0
+
+# ── Stage 1: build libmodsecurity + ModSecurity-nginx connector. ────────
+FROM openresty/openresty:${OPENRESTY_VERSION}-alpine-fat AS builder
+RUN apk add --no-cache \
+        build-base linux-headers automake autoconf libtool pkgconfig \
+        bison flex git curl ca-certificates \
+        pcre2-dev pcre-dev openssl-dev zlib-dev libxml2-dev yajl-dev \
+        lmdb-dev curl-dev geoip-dev
+
+# libmodsecurity v3.
+ARG MODSEC_VERSION
+RUN git clone --depth 1 -b ${MODSEC_VERSION} \
+      https://github.com/SpiderLabs/ModSecurity.git /src/modsec \
+    && cd /src/modsec \
+    && git submodule init && git submodule update --depth 1 \
+    && ./build.sh && ./configure --with-yajl --with-pcre --with-lmdb --without-curl \
+    && make -j"$(nproc)" && make install
+
+# ModSecurity-nginx — must build against OpenResty's nginx source.
+ARG OPENRESTY_VERSION
+RUN curl -fL "https://openresty.org/download/openresty-${OPENRESTY_VERSION}.tar.gz" \
+      | tar -xz -C /src \
+    && git clone --depth 1 \
+        https://github.com/SpiderLabs/ModSecurity-nginx.git /src/modsec-nginx \
+    && cd /src/openresty-${OPENRESTY_VERSION} \
+    && ./configure --prefix=/usr/local/openresty \
+        --with-compat \
+        --add-dynamic-module=/src/modsec-nginx \
+        --with-http_ssl_module \
+    && make -j"$(nproc)" modules \
+    && cp build/modules/ngx_http_modsecurity_module.so /usr/local/openresty/nginx/modules/
+
+# ── Stage 2: runtime image. ─────────────────────────────────────────────
+FROM openresty/openresty:${OPENRESTY_VERSION}-alpine
+RUN apk add --no-cache \
+        pcre2 pcre libstdc++ libxml2 yajl lmdb libcurl geoip ca-certificates \
+        curl tini
+
+COPY --from=builder /usr/local/modsecurity /usr/local/modsecurity
+COPY --from=builder /usr/local/openresty/nginx/modules/ngx_http_modsecurity_module.so \
+                    /usr/local/openresty/nginx/modules/
+
+# OWASP CRS — same version we ran in the default flavour.
+ARG CRS_VERSION
+RUN mkdir -p /etc/modsecurity.d \
+    && curl -fL "https://github.com/coreruleset/coreruleset/archive/refs/tags/${CRS_VERSION}.tar.gz" \
+      | tar -xz -C /etc/modsecurity.d \
+    && mv /etc/modsecurity.d/coreruleset-* /etc/modsecurity.d/owasp-crs \
+    && cp /etc/modsecurity.d/owasp-crs/crs-setup.conf.example \
+          /etc/modsecurity.d/owasp-crs/crs-setup.conf
+
+# Lua subrequest entry point — see infra/nginx/lua/score.lua.
+COPY infra/nginx/lua /etc/nginx/lua
+
+# WHY: tini reaps zombies if some Lua coroutine misbehaves; cheap insurance.
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["openresty", "-g", "daemon off;"]

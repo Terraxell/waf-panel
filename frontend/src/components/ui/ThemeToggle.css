@@ -1,0 +1,31 @@
+/* ThemeToggle — three-state segmented button (light/auto/dark).
+ * Same visual language as LanguageSwitcher so the shell header stays
+ * coherent (two segmented widgets, identical chrome). */
+
+.theme-toggle {
+  display: inline-flex;
+  border: var(--b-thin);
+}
+
+.theme-toggle__btn {
+  padding: 0.35rem 0.6rem;
+  font-family: var(--f-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: transparent;
+  border: 0;
+  color: var(--c-sage);
+  cursor: pointer;
+}
+
+.theme-toggle__btn + .theme-toggle__btn {
+  border-left: var(--b-thin);
+}
+
+.theme-toggle__btn:hover { color: var(--c-black); }
+
+.theme-toggle__btn--active {
+  background: var(--c-black);
+  color: var(--c-white);
+}

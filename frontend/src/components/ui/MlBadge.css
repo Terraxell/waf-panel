@@ -1,0 +1,76 @@
+/* MlBadge — three-state probability chip used in the Incidents table.
+ * Colour mapping mirrors the dashboard semantics:
+ *   high (≥ 0.8) → accent (blue)        — strong attack signal
+ *   med  (≥ 0.4) → muted-foreground     — borderline, eye-on
+ *   low  (<  0.4) → subtle               — likely benign
+ *   na   (no model / fallback) → outline only, with "—"
+ */
+
+.ml-badge {
+  display: inline-block;
+  min-width: 3.4em;
+  padding: 0.05em 0.5em;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 0;
+  cursor: help;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.ml-badge--loading {
+  color: var(--muted-foreground);
+}
+
+.ml-badge--low {
+  color: var(--muted-foreground);
+  border-color: var(--border);
+}
+
+.ml-badge--med {
+  color: var(--foreground);
+  border-color: var(--foreground);
+}
+
+.ml-badge--high {
+  color: var(--background);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.ml-badge--na {
+  color: var(--muted-foreground);
+  border-style: dashed;
+}
+
+.ml-badge[data-fallback] {
+  background: transparent;
+}
+
+/* Sprint 13 (C17b): structured popover content. Rows stack vertically
+   with monospace alignment for the contributor weights. */
+.ml-badge__popover-row {
+  display: block;
+}
+
+.ml-badge__popover-row--header {
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.ml-badge__contrib {
+  display: grid;
+  grid-template-columns: 3.2rem 1fr;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+.ml-badge__contrib-weight {
+  text-align: right;
+  font-feature-settings: "tnum" 1;
+}
+
+.ml-badge__contrib--pos .ml-badge__contrib-weight { color: var(--c-royal); }
+.ml-badge__contrib--neg .ml-badge__contrib-weight { color: var(--c-sage); }

@@ -1,0 +1,45 @@
+# nginx vhost template; rendered by /docker-entrypoint.d/20-envsubst-on-templates.sh.
+# WHY: ModSecurity is already wired in by the image at the http {} context
+#      (see /etc/nginx/conf.d/modsecurity.conf). This file only configures
+#      the vhost — listen, log format, upstream proxy. Re-declaring
+#      `modsecurity on; modsecurity_rules_file ...;` here would load CRS
+#      twice and CRS' rule id 200000 (setup) would clash with itself.
+
+# JSON access log format (http context — included from nginx.conf via conf.d/).
+log_format json_combined escape=json
+    '{'
+        '"ts":"$time_iso8601",'
+        '"remote_ip":"$remote_addr",'
+        '"method":"$request_method",'
+        '"path":"$uri",'
+        '"query":"$args",'
+        '"status":$status,'
+        '"bytes":$bytes_sent,'
+        '"latency_ms":$request_time,'
+        '"ua":"$http_user_agent",'
+        '"referer":"$http_referer"'
+    '}';
+
+server {
+    listen 8080;
+    server_name ${SERVER_NAME};
+
+    access_log /var/log/nginx/access.json json_combined;
+    error_log  /var/log/nginx/error.log  warn;
+
+    location / {
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_pass ${BACKEND};
+    }
+
+    # Health endpoint — disable ModSecurity per-location for the compose
+    # healthcheck (avoids latency from the rule engine on every probe).
+    location = /__health {
+        modsecurity off;
+        access_log off;
+        return 200 "ok\n";
+    }
+}
