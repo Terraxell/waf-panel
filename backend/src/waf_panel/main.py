@@ -18,6 +18,7 @@ from .api import rules as rules_api
 from .clickhouse_client import dispose_clickhouse
 from .config import Settings, get_settings
 from .db.session import get_sessionmaker
+from .observability import RequestIdMiddleware, install_metrics, setup_structlog
 from .repositories.deps import is_in_memory_active
 from .repositories.pg import PgUsersRepo
 from .security import verify_password
@@ -142,6 +143,7 @@ async def _lifespan(_: FastAPI):
 def create_app() -> FastAPI:
     settings = get_settings()
     _validate_settings(settings)
+    setup_structlog(level=settings.log_level)
     app = FastAPI(
         title="waf-panel",
         version=__version__,
@@ -171,6 +173,15 @@ def create_app() -> FastAPI:
     # ADR-0014: double-submit CSRF for cookie-authenticated mutating
     # requests. Bearer-auth flows (CLI/CI) bypass -- see middleware code.
     app.add_middleware(CsrfMiddleware)
+    # Outermost layer so the request-id binding wraps every other
+    # middleware's logs (CORS, CSRF, SecurityHeaders all emit through
+    # stdlib logging which structlog now formats).
+    app.add_middleware(RequestIdMiddleware)
+
+    # Prometheus /metrics -- registered before routers so the route
+    # ordering is deterministic. Excluded from OpenAPI on purpose
+    # (it's an ops surface, not part of the SPA contract).
+    install_metrics(app)
 
     app.include_router(health_api.router)
     app.include_router(auth_api.router, prefix="/api/v1")

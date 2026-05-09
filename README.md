@@ -102,6 +102,7 @@ bring-up (each with symptom, root cause, fix).
 | Health endpoint     | <http://localhost:8080/__health>     | Bypasses ModSecurity               |
 | ClickHouse HTTP     | <http://localhost:8123>              | analytics store                    |
 | Postgres            | `localhost:5432`                     | rules / users / audit              |
+| Prometheus metrics  | <http://localhost:8000/metrics>      | RPS / p99 / error rate             |
 
 Default panel login: `admin@example.com` / `admin`. Rotate it via the
 API or psql before any non-dev usage. The backend refuses to start

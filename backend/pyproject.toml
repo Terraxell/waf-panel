@@ -22,6 +22,10 @@ dependencies = [
     # featurising them via waf_ml.features. Without it the worker
     # crashes at import time on a fresh container.
     "numpy>=1.26",
+    # Observability stack — added in #129. Both libs are mature, BSD/MIT,
+    # and have first-party stubs (no types-* shim needed).
+    "prometheus-fastapi-instrumentator>=7.0",
+    "structlog>=24.1",
 ]
 
 [project.optional-dependencies]
