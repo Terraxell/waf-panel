@@ -114,3 +114,28 @@ class HealthOut(BaseModel):
     status: Literal["ok"] = "ok"
     version: str
     components: dict[str, str]
+
+
+# ── users (#123 management UI) ──────────────────────────────────────
+
+
+class UserCreateIn(BaseModel):
+    email: EmailStr
+    role: Literal["admin", "analyst", "viewer"]
+    password: str = Field(min_length=8, max_length=256)
+
+
+class UserUpdateIn(BaseModel):
+    role: Literal["admin", "analyst", "viewer"] | None = None
+    is_active: bool | None = None
+
+
+class UserOut(BaseModel):
+    """The shape we expose to the panel. Never includes password_hash."""
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    email: EmailStr
+    role: Literal["admin", "analyst", "viewer"]
+    is_active: bool
+    created_at: datetime | None = None
+    last_login_at: datetime | None = None

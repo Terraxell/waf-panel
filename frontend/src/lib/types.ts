@@ -160,3 +160,25 @@ export interface DriftReportFull extends DriftReportSummary {
   n_features_compared: number;
   features: DriftFeatureRow[];
 }
+
+
+// ── User management (#123) ───────────────────────────────────────
+export interface UserSummary {
+  id: string;
+  email: string;
+  role: Role;
+  is_active: boolean;
+  created_at?: string | null;
+  last_login_at?: string | null;
+}
+
+export interface UserCreate {
+  email: string;
+  role: Role;
+  password: string;
+}
+
+export interface UserUpdate {
+  role?: Role;
+  is_active?: boolean;
+}

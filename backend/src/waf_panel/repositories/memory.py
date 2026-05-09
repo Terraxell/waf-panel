@@ -33,6 +33,58 @@ class InMemoryUsersRepo:
         uid = self._by_email.get(email.lower())
         return self._by_id.get(uid) if uid else None
 
+    async def by_id(self, user_id: UUID) -> _UserRow | None:
+        return self._by_id.get(user_id)
+
+    async def list_all(self) -> list[_UserRow]:
+        # WHY sorted by id: deterministic for tests; PG version sorts
+        # by created_at DESC, but the in-memory rows have no
+        # created_at by design (kept dataclass tiny).
+        return list(self._by_id.values())
+
+    async def create(
+        self,
+        *,
+        email: str,
+        password_hash: str,
+        role: str,
+    ) -> _UserRow:
+        row = _UserRow(
+            id=uuid4(),
+            email=email,
+            password_hash=password_hash,
+            role=role,
+            is_active=True,
+        )
+        self._by_id[row.id] = row
+        self._by_email[row.email.lower()] = row.id
+        return row
+
+    async def update_partial(
+        self,
+        user_id: UUID,
+        *,
+        role: str | None = None,
+        is_active: bool | None = None,
+    ) -> _UserRow | None:
+        row = self._by_id.get(user_id)
+        if row is None:
+            return None
+        if role is not None:
+            row.role = role
+        if is_active is not None:
+            row.is_active = is_active
+        return row
+
+    async def delete(self, user_id: UUID) -> bool:
+        # Soft-delete -- match PG behaviour. The audit_log fixture in
+        # tests has FK to users.id, so we never actually pop the row.
+        row = self._by_id.get(user_id)
+        if row is None:
+            return False
+        row.is_active = False
+        return True
+
     async def touch_login(self, user_id: UUID) -> None:
         return  # no-op
 

@@ -6,6 +6,7 @@ import { Incidents } from "@/pages/Incidents";
 import { Rules } from "@/pages/Rules";
 import { Audit } from "@/pages/Audit";
 import { Drift } from "@/pages/Drift";
+import { Users } from "@/pages/Users";
 import { Button } from "@/components/ui/Button";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
@@ -82,6 +83,9 @@ function Shell({ children }: { children: ReactElement }) {
             <NavLink to="/drift" className={({ isActive }) => `shell-link${isActive ? " is-active" : ""}`}>
               {t("nav.drift")}
             </NavLink>
+            <NavLink to="/users" className={({ isActive }) => `shell-link${isActive ? " is-active" : ""}`}>
+              {t("nav.users")}
+            </NavLink>
           </nav>
           <ThemeToggle />
           <LanguageSwitcher />
@@ -112,6 +116,7 @@ const SHELL_ROUTES: { path: string; element: ReactElement }[] = [
   { path: "/rules", element: <Rules /> },
   { path: "/audit", element: <Audit /> },
   { path: "/drift", element: <Drift /> },
+  { path: "/users", element: <Users /> },
 ];
 
 export function App() {

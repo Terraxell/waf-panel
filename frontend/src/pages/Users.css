@@ -1,0 +1,78 @@
+/* User management page (#123). */
+
+.users__hint, .users__error, .users__forbidden, .users__empty {
+  color: var(--text-muted);
+}
+.users__forbidden, .users__error {
+  color: var(--danger);
+}
+.users__empty {
+  font-style: italic;
+  text-align: center;
+  padding: 1rem;
+}
+
+.users__form-card {
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+}
+.users__form-card h2 {
+  font-size: 1rem;
+  margin: 0 0 0.75rem;
+}
+.users__form {
+  align-items: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.users__role-select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+}
+.users__role-select select,
+.users__table select {
+  padding: 0.375rem 0.5rem;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 0.25rem;
+}
+
+.users__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.users__table th,
+.users__table td {
+  border-bottom: 1px solid var(--border);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  font-size: 0.875rem;
+  vertical-align: middle;
+}
+.users__row--disabled {
+  opacity: 0.6;
+}
+
+.users__status {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.users__status--active {
+  background: rgba(16, 185, 129, 0.15);
+  color: #047857;
+}
+.users__status--disabled {
+  background: var(--surface-hover);
+  color: var(--text-muted);
+}
+[data-theme="dark"] .users__status--active {
+  color: #6ee7b7;
+}

@@ -16,6 +16,7 @@ import type {
   MetricsOverview, MlExplainResponse, MlInspectRequest, MlInspectResponse,
   MlThresholdResponse, RuleCreate, RuleOut, TimeBucket, TokenOut,
   DriftReportFull, DriftReportSummary,
+  UserCreate, UserSummary, UserUpdate,
 } from "./types";
 
 const BASE = "/api/v1";
@@ -128,6 +129,15 @@ export const api = {
 
   listAudit: (limit = 100, action_prefix?: string) =>
     request<AuditEntry[]>(`/audit${qs({ limit, action_prefix })}`),
+  // ── Users (#123 admin-only management) ────────────────────────────
+  listUsers: () => request<UserSummary[]>("/users"),
+  createUser: (payload: UserCreate) =>
+    request<UserSummary>("/users", { method: "POST", body: JSON.stringify(payload) }),
+  updateUser: (id: string, patch: UserUpdate) =>
+    request<UserSummary>(`/users/${id}`, { method: "PATCH", body: JSON.stringify(patch) }),
+  deleteUser: (id: string) =>
+    request<void>(`/users/${id}`, { method: "DELETE" }),
+
   // ── Drift reports ──────────────────────────────────────────────────
   listDriftReports: () => request<DriftReportSummary[]>("/drift"),
   getDriftReport: (name: string) =>

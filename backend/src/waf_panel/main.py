@@ -15,6 +15,7 @@ from .api import incidents as incidents_api
 from .api import metrics as metrics_api
 from .api import ml as ml_api
 from .api import rules as rules_api
+from .api import users as users_api
 from .api import ws_dashboard as ws_dashboard_api
 from .clickhouse_client import dispose_clickhouse
 from .config import Settings, get_settings
@@ -192,6 +193,7 @@ def create_app() -> FastAPI:
     app.include_router(audit_api.router, prefix="/api/v1")
     app.include_router(drift_api.router, prefix="/api/v1")
     app.include_router(ml_api.router, prefix="/api/v1")
+    app.include_router(users_api.router, prefix="/api/v1")
     app.include_router(ws_dashboard_api.router, prefix="/api/v1")
 
     return app

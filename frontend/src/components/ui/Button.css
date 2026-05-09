@@ -35,3 +35,15 @@
   border: var(--b-thin);
 }
 .btn[data-variant="ghost"]:hover:not(:disabled) { border-color: var(--c-black); }
+
+
+/* Danger variant — for destructive actions (e.g. user delete in #123).
+ * Uses the design-system danger token so light + dark themes inherit. */
+.btn[data-variant="danger"] {
+  background: transparent;
+  color: var(--danger, #b91c1c);
+  border: 1px solid var(--danger, #b91c1c);
+}
+.btn[data-variant="danger"]:hover:not(:disabled) {
+  background: rgba(220, 38, 38, 0.1);
+}

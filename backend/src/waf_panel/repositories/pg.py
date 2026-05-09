@@ -33,6 +33,63 @@ class PgUsersRepo:
         stmt = select(User).where(User.email == email)
         return (await self._s.execute(stmt)).scalar_one_or_none()
 
+    async def by_id(self, user_id: UUID) -> User | None:
+        stmt = select(User).where(User.id == user_id)
+        return (await self._s.execute(stmt)).scalar_one_or_none()
+
+    async def list_all(self) -> list[User]:
+        # WHY ordered by created_at DESC: panel shows newest first.
+        stmt = select(User).order_by(User.created_at.desc())
+        return list((await self._s.execute(stmt)).scalars().all())
+
+    async def create(
+        self,
+        *,
+        email: str,
+        password_hash: str,
+        role: str,
+    ) -> User:
+        row = User(
+            email=email,
+            password_hash=password_hash,
+            role=role,
+            is_active=True,
+        )
+        self._s.add(row)
+        await self._s.flush()
+        await self._s.refresh(row)
+        return row
+
+    async def update_partial(
+        self,
+        user_id: UUID,
+        *,
+        role: str | None = None,
+        is_active: bool | None = None,
+    ) -> User | None:
+        values: dict[str, Any] = {}
+        if role is not None:
+            values["role"] = role
+        if is_active is not None:
+            values["is_active"] = is_active
+        if not values:
+            return await self.by_id(user_id)
+        stmt = update(User).where(User.id == user_id).values(**values).returning(User)
+        row = (await self._s.execute(stmt)).scalar_one_or_none()
+        return row
+
+    async def delete(self, user_id: UUID) -> bool:
+        # WHY soft-delete: a hard DELETE breaks the audit_log foreign
+        # key (actor_id → users.id). We instead disable the row so
+        # past audit entries remain attributable.
+        stmt = (
+            update(User)
+            .where(User.id == user_id)
+            .values(is_active=False)
+            .returning(User.id)
+        )
+        return (await self._s.execute(stmt)).scalar_one_or_none() is not None
+
     async def touch_login(self, user_id: UUID) -> None:
         stmt = update(User).where(User.id == user_id).values(last_login_at=datetime.now(UTC))
         await self._s.execute(stmt)

@@ -164,6 +164,31 @@ export const en = {
   "dashboard.live.connecting": "connecting…",
   "dashboard.live.fallback": "polling",
   "dashboard.live.title": "Live status: WebSocket pushes new metrics every 5 s when connected; falls back to 30 s polling otherwise.",
+
+  // ── User management (#123) ────────────────────────────────────
+  "nav.users": "Users",
+  "users.kicker": "panel access",
+  "users.title": "User management",
+  "users.hint": "Admin-only. Add analysts and viewers, rotate roles, disable accounts. Disabled rows stay in the audit log via FK.",
+  "users.forbidden": "This page is admin-only.",
+  "users.error_load": "Failed to load users.",
+  "users.error_generic": "Could not save the change.",
+  "users.empty": "No users in the system.",
+  "users.form.title": "Add user",
+  "users.form.email": "EMAIL",
+  "users.form.password": "PASSWORD (≥8 chars)",
+  "users.form.submit": "Create",
+  "users.col.email": "Email",
+  "users.col.role": "Role",
+  "users.col.status": "Status",
+  "users.col.last_login": "Last login",
+  "users.col.actions": "Actions",
+  "users.status.active": "active",
+  "users.status.disabled": "disabled",
+  "users.actions.disable": "Disable",
+  "users.actions.enable": "Enable",
+  "users.actions.delete": "Delete",
+  "users.actions.delete_confirm": "Delete user {email}? They will be marked inactive but kept in the audit log.",
 } as const;
 
 // EnDict keeps the *key shape* as the contract — TS errors on a missing
