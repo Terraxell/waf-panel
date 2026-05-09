@@ -162,7 +162,10 @@ jobs:
           pip install -e ml[dev] --quiet
           pip install -e ml-service[dev] --quiet
       - name: pip-audit (combined env)
-        run: pip-audit --strict --disable-pip
+        # WHY no --disable-pip: that flag requires -r REQUIREMENTS;
+        # we audit the resolved env, so plain pip-audit on the
+        # current interpreter is the right invocation.
+        run: pip-audit --strict
 
   frontend:
     name: frontend (tsc + eslint + vitest + vite build)
