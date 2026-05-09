@@ -62,8 +62,13 @@ class InMemoryRulesRepo:
             enabled=payload.enabled,
             created_at=datetime.now(UTC),
             updated_at=datetime.now(UTC),
-            created_by=created_by,
         )
+        # WHY: created_by is part of the create() signature so the
+        # service layer can pass through the actor id, but RuleOut itself
+        # does not carry it -- audit logging records the actor via
+        # audit_repo.record(actor_id=...) instead. Keep the kwarg in the
+        # signature for symmetry with PgRulesRepo.create.
+        _ = created_by
         self._rows.append(row)
         return row
 

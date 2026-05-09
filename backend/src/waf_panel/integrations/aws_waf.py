@@ -62,7 +62,9 @@ _LAST_SYNC_TS: dict[str, float] = {}
 
 def _client_factory(config: AwsWafConfig):
     """Late-bound import so tests don't require boto3."""
-    import boto3  # type: ignore[import-not-found]
+    # WHY no type: ignore: ignore_missing_imports = true in mypy config
+    # already silences the missing-stubs warning for boto3 globally.
+    import boto3
 
     return boto3.client("wafv2", region_name=config.region)
 
