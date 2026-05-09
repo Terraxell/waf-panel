@@ -9,14 +9,51 @@ import { Button } from "@/components/ui/Button";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
-import { isAuthenticated, setToken, subscribe } from "@/lib/auth";
+import { api } from "@/lib/api";
+import { isAuthenticated, setAuthed, subscribe } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import "./App.css";
 
 function useAuthFlag(): boolean {
-  const [authed, setAuthed] = useState(isAuthenticated);
-  useEffect(() => subscribe(() => setAuthed(isAuthenticated())), []);
+  const [authed, setLocalAuthed] = useState(isAuthenticated);
+  useEffect(() => subscribe(() => setLocalAuthed(isAuthenticated())), []);
   return authed;
+}
+
+/**
+ * On first mount, ask the backend whether the session cookie is still
+ * good. ADR-0014: the JWT lives in a httpOnly cookie that JS can't read,
+ * so we can't just inspect document.cookie — we have to ping /auth/me.
+ *
+ * If the cookie is valid, we also rotate a fresh CSRF token via
+ * /auth/csrf so the in-memory store is populated before the user
+ * triggers any mutating request.
+ */
+function useBootstrapSession(): boolean {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        await api.me();
+        if (cancelled) return;
+        // refreshCsrf already updates the in-memory token store; we
+        // just need to mirror the "session is good" flag for RequireAuth.
+        await api.refreshCsrf();
+        if (cancelled) return;
+        setAuthed(true);
+      } catch {
+        // 401 / network error → user simply isn't logged in. RequireAuth
+        // will bounce them to /login. Nothing to do here.
+      } finally {
+        if (!cancelled) setReady(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return ready;
 }
 
 function RequireAuth({ children }: { children: ReactElement }) {
@@ -44,52 +81,4 @@ function Shell({ children }: { children: ReactElement }) {
             <NavLink to="/audit" className={({ isActive }) => `shell-link${isActive ? " is-active" : ""}`}>
               {t("nav.audit")}
             </NavLink>
-          </nav>
-          <ThemeToggle />
-          <LanguageSwitcher />
-          <Button
-            variant="ghost"
-            onClick={() => {
-              setToken(null);
-              navigate("/login", { replace: true });
-            }}
-          >
-            {t("nav.logout")}
-          </Button>
-        </div>
-      </header>
-      <main className="page">
-        <ErrorBoundary>{children}</ErrorBoundary>
-      </main>
-    </>
-  );
-}
-
-const SHELL_ROUTES: { path: string; element: ReactElement }[] = [
-  { path: "/", element: <Dashboard /> },
-  { path: "/incidents", element: <Incidents /> },
-  { path: "/rules", element: <Rules /> },
-  { path: "/audit", element: <Audit /> },
-];
-
-export function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        {SHELL_ROUTES.map(({ path, element }) => (
-          <Route
-            key={path}
-            path={path}
-            element={
-              <RequireAuth>
-                <Shell>{element}</Shell>
-              </RequireAuth>
-            }
-          />
-        ))}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
-  );
-}
+  

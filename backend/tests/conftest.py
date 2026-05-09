@@ -26,10 +26,9 @@ ADMIN_ID = UUID("00000000-0000-0000-0000-000000000001")
 def in_memory_repos() -> Iterator[InMemoryClickHouseClient]:
     """Switch repositories AND ClickHouse to in-memory for every test.
 
-    WHY (fix): also clears the login rate-limit bucket
-    between cases. Without this, tests that share the `admin_token`
-    fixture pile up calls into the same (testclient-ip, admin@example.com)
-    bucket and the 6th test run trips a 429.
+    Also clears the login rate-limit bucket between cases so that
+    repeated admin_token fixture calls don't fill the (testclient-ip,
+    admin@example.com) bucket and trip a 429 on the 6th test.
     """
     from waf_panel.security_rate_limit import reset_for_tests as reset_rl
 
@@ -50,8 +49,6 @@ def in_memory_repos() -> Iterator[InMemoryClickHouseClient]:
     reset_rl()
 
 
-
-
 @pytest.fixture
 def client() -> TestClient:
     from waf_panel.main import create_app
@@ -65,4 +62,10 @@ def admin_token(client: TestClient) -> str:
         json={"email": "admin@example.com", "password": "admin"},
     )
     assert res.status_code == 200, res.text
+    # ADR-0014: login also plants session + CSRF cookies on the shared
+    # TestClient. Tests that use this fixture want a Bearer token only;
+    # the lingering cookies would change the CSRF middleware path on
+    # subsequent requests ("no auth header" tests would see 403 instead
+    # of 401). Strip the cookies so the fixture is side-effect-free.
+    client.cookies.clear()
     return res.json()["access_token"]

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { api } from "@/lib/api";
-import { setToken } from "@/lib/auth";
+import { setAuthed } from "@/lib/auth";
 import { useT } from "@/lib/i18n";
 import type { ApiError } from "@/lib/types";
 import "./Login.css";
@@ -21,8 +21,11 @@ export function Login() {
     setError(null);
     setLoading(true);
     try {
-      const token = await api.login(email, password);
-      setToken(token.access_token);
+      // ADR-0014: api.login plants the httpOnly session cookie via the
+      // Set-Cookie response header and caches the CSRF token in the
+      // in-memory store. JS never sees the JWT itself.
+      await api.login(email, password);
+      setAuthed(true);
       navigate("/", { replace: true });
     } catch (err) {
       const apiErr = err as ApiError;
@@ -63,11 +66,4 @@ export function Login() {
             required
             error={error ?? undefined}
           />
-          <div className="row" style={{ justifyContent: "flex-end" }}>
-            <Button type="submit" loading={loading}>{t("login.submit")}</Button>
-          </div>
-        </form>
-      </div>
-    </main>
-  );
-}
+          <div className="row" style={{ justif

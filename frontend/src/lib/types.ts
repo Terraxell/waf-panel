@@ -17,6 +17,13 @@ export interface TokenOut {
   access_token: string;
   token_type: "bearer";
   expires_in: number;
+  // ADR-0014: backend returns the CSRF token in the body so the SPA
+  // doesn't have to read document.cookie on first paint.
+  csrf_token: string;
+}
+
+export interface CsrfOut {
+  csrf_token: string;
 }
 
 export interface RuleOut {
@@ -124,8 +131,4 @@ export interface MlExplainResponse {
   fallback_reason: MlFallbackReason | null;
 }
 
-// ── ML block-mode threshold  ────────────────────────────────
-export interface MlThresholdResponse {
-  value: number;
-  description?: string;
-}
+// ── ML 
