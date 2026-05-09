@@ -18,6 +18,10 @@ dependencies = [
     "python-jose[cryptography]>=3.3",
     "passlib[argon2]>=1.7",
     "python-multipart>=0.0.9",
+    # numpy: drift_worker.py vectorises rows from traffic_log before
+    # featurising them via waf_ml.features. Without it the worker
+    # crashes at import time on a fresh container.
+    "numpy>=1.26",
 ]
 
 [project.optional-dependencies]

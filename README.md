@@ -178,8 +178,8 @@ section 5.
 | CP   | Deadline week | Definition                                                       | Status     |
 |------|---------------|------------------------------------------------------------------|------------|
 | CP-1 | 4             | Stack boots, baseline traffic in ClickHouse, PZ section 1 done   | done       |
-| CP-2 | 8             | ML offline metrics meet targets, PZ sections 2–3 done            | sprint 7 ✓  |
-| CP-3 | 11            | Full hybrid passed the attack bench, PZ sections 4–5 done, deck  | sprint 10 ✓ |
+| CP-2 | 8             | ML offline metrics meet targets, PZ sections 2–3 done            | done        |
+| CP-3 | 11            | Full hybrid passed the attack bench, PZ sections 4–5 done, deck  | done        |
 
 ## License
 
@@ -188,4 +188,3 @@ MIT. See `LICENSE`.
 ## Contact
 
 Gennadii Panteleev: Terraxell@gmail.com
-                      

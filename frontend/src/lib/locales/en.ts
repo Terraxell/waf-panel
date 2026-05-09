@@ -141,4 +141,7 @@ export const en = {
   "audit.load_more": "Load more",
 } as const;
 
-// WHY this maps to `string` (no
+// EnDict keeps the *key shape* as the contract — TS errors on a missing
+// or extra key in any sibling locale (ru/de/fr) — but values are plain
+// `string`, so translators are not forced to mirror the English literal.
+export type EnDict = { [K in keyof typeof en]: string };
