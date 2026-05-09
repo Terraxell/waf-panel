@@ -1,4 +1,5 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
+import type * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -127,12 +128,52 @@ function RuleEditor(props: { onClose: () => void; onCreated: () => void }) {
     create.mutate();
   }
 
+  // WHY a11y: jsx-a11y/click-events-have-key-events requires every
+  // element with onClick to also handle keyboard. The proper modal
+  // contract is:
+  //   - role="dialog" + aria-modal="true" so screen readers know it's
+  //     a focused modal,
+  //   - tabIndex={-1} so the div can receive focus programmatically
+  //     and serve as a keyboard target without joining the tab order,
+  //   - onClick fires only when target === currentTarget (clicking
+  //     the backdrop, not a bubbled child),
+  //   - onKeyDown handles Escape on the same element -- jsx-a11y wants
+  //     keyboard handling co-located with the click handler, not
+  //     pulled out to a document-level listener.
+  // Auto-focus the modal on mount so the Escape-key handler is
+  // reachable without the user clicking inside first.
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    dialogRef.current?.focus();
+  }, []);
+
+  function onBackdropClick(e: React.MouseEvent<HTMLDivElement>) {
+    if (e.target === e.currentTarget) props.onClose();
+  }
+  function onBackdropKey(e: React.KeyboardEvent<HTMLDivElement>) {
+    if (e.key === "Escape") props.onClose();
+  }
+
   return (
-    <div className="rules-modal" onClick={props.onClose}>
-      <form className="rules-modal__card" onClick={(e) => e.stopPropagation()} onSubmit={onSubmit}>
+    // role="dialog" + tabIndex={-1} + Escape handler is the canonical
+    // React modal pattern. The jsx-a11y rule
+    // 'no-noninteractive-element-interactions' would prefer a native
+    // interactive element here, but that rule is turned off in the
+    // a11y config (.eslintrc.a11y.cjs) for exactly this case.
+    <div
+      ref={dialogRef}
+      className="rules-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="rules-editor-title"
+      tabIndex={-1}
+      onClick={onBackdropClick}
+      onKeyDown={onBackdropKey}
+    >
+      <form className="rules-modal__card" onSubmit={onSubmit}>
         <header>
           <span className="mono-label">{t("rules.editor.kicker")}</span>
-          <h2>{t("rules.editor.title")}</h2>
+          <h2 id="rules-editor-title">{t("rules.editor.title")}</h2>
         </header>
 
         <div className="rules-modal__row">

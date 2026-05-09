@@ -9,9 +9,9 @@
     "preview": "vite preview --host 0.0.0.0 --port 4173",
     "lint": "eslint src --ext .ts,.tsx --max-warnings 0",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run --exclude src/test/a11y.test.tsx",
     "test:watch": "vitest",
-    "lint:a11y": "eslint src --ext .ts,.tsx --config .eslintrc.a11y.cjs --max-warnings 0",
+    "lint:a11y": "eslint src --ext .ts,.tsx --no-eslintrc --config .eslintrc.a11y.cjs --max-warnings 0",
     "test:a11y": "vitest run src/test/a11y.test.tsx"
   },
   "dependencies": {

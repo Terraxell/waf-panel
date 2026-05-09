@@ -21,10 +21,10 @@ export default defineConfig({
     // WHY: ignore node_modules + the built-in Vite-shipped fixtures; only
     // pick up our hand-written tests under src/.
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
-    // WHY exclude: a11y.test.tsx is run by a separate `npm run test:a11y`
-    // step in the dedicated CI a11y job (#127) so the main vitest pass
-    // doesn't pull in vitest-axe / axe-core when those deps may not be
-    // installed yet on a stripped-down dev clone.
-    exclude: ["**/node_modules/**", "src/test/a11y.test.tsx"],
+    // WHY no a11y.test.tsx exclude here: vitest applies the config
+    // exclude even when a path is passed on the CLI, so excluding the
+    // a11y test in this file would also break the dedicated
+    // `npm run test:a11y` invocation. Instead, the main `npm run test`
+    // script passes --exclude on the CLI; the a11y script doesn't.
   },
 });
