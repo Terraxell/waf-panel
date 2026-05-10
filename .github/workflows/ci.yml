@@ -245,14 +245,24 @@ jobs:
         # WHY .env: docker-compose.yml expects the file. Defaults are fine
         # for the e2e demo; we only need a session cookie + admin login.
         run: cp .env.example .env
+      - name: vendor waf_ml into ml-service
+        # WHY: docker compose --build resolves the entire compose graph
+        # even when --no-deps would be enough; ml-service's Dockerfile
+        # COPYs ./waf_ml/ which only exists if 'make vendor-ml' has run
+        # (or this step). Doing it once up front makes any later
+        # 'docker compose build' work without surprises.
+        run: cp -r ml/src/waf_ml ml-service/waf_ml
       - name: bring up the minimal stack
         # WHY only postgres + backend + frontend: ml-service / clickhouse
         # / vector / dvwa add ~5 minutes of wall time and aren't on the
-        # critical path of the smoke test. ClickHouse-shaped pages render
-        # empty placeholders, which the test tolerates.
+        # critical path of the smoke test. --no-deps stops compose from
+        # also pulling in ml-service through any indirect chain.
         run: |
-          docker compose up -d --build postgres backend frontend
-          # Wait for the health gates on the three containers.
+          # backend wants postgres + redis + clickhouse healthy; pull them
+          # all into the up call so depends_on chains resolve cleanly.
+          docker compose up -d --build postgres redis clickhouse
+          docker compose up -d --build backend frontend
+          # Wait for the SPA to respond.
           for _ in $(seq 1 60); do
             if curl -fs http://localhost:3000/ >/dev/null 2>&1; then
               echo "frontend ready"; break

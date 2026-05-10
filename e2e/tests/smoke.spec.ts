@@ -44,11 +44,13 @@ test("happy-path: login → dashboard → rules → audit → logout", async ({ 
   await page.goto("/audit");
   await expect(page).toHaveURL(/\/audit$/);
 
-  // 6. Sign out via the shell button. The label is locale-dependent;
-  //    match by the navigate behaviour: clicking it should land us on
-  //    /login. We use the variant ghost button at the right end of the
-  //    shell row.
-  await page.locator("header.shell-bar, header.row.shell-bar").last().getByRole("button").last().click();
+  // 6. Sign out via the shell button. Match by accessible name across
+  //    the four shipped locales -- the className-based locator was
+  //    fragile because the shell wraps in a div.row.shell-bar inside
+  //    a <header>, not on the header itself.
+  await page
+    .getByRole("button", { name: /sign out|выйти|abmelden|se déconnecter/i })
+    .click();
   await expect(page).toHaveURL(/\/login$/);
 });
 
