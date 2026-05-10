@@ -6,7 +6,66 @@ project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-— (Future: real CSIC bench, mTLS between containers, multi-region
+— Post-1.1.1 audit pass + ADR-0014 / ADR-0015 follow-throughs.
+The 12-week course-project scope is closed; this section captures
+what landed against `main` after the 1.1.1 tag while no formal
+release was cut. Anything here moves into a `1.2.0` line on the
+next tag.
+
+### Added
+
+- ADR-0014 — cookie + CSRF auth (httpOnly `waf_session` + double-
+  submit `X-CSRF-Token`). Removes JWT-in-localStorage. Backend
+  middleware exempts safe methods, `/auth/login`, `/auth/logout`,
+  `/auth/refresh`, and Bearer-auth requests.
+- ADR-0015 — refresh-token rotation with family-based replay
+  detection. Access-token TTL drops to 15 min; refresh TTL is 14 d.
+  Replay (older generation presented after a rotation) revokes the
+  whole family + writes `auth.refresh.replay_revoked` to audit.
+  CAS on `bump_generation(expected_generation=...)` closes the
+  SELECT-then-UPDATE race that two concurrent /refresh calls would
+  otherwise have hit.
+- Migration `0004_refresh_families` — `refresh_token_families` table
+  (id, user_id FK, generation, created_at, last_used_at, revoked_at).
+- `frontend/src/lib/useLiveDashboard.ts` — WebSocket hook with
+  exponential-backoff reconnect (capped at 30 s, resets on success).
+- Drift Reports viewer: `GET /api/v1/drift` + UI page sorted newest
+  first, opens individual reports inline.
+- User management UI (`/users`) — admin-only CRUD over `/api/v1/users`,
+  includes role + active toggle.
+- Drift worker: `rebaseline_if_quiet()` refreshes the frozen baseline
+  only after a 72-h quiet window; never re-baselines mid-incident.
+- CLI: `python -m waf_panel.cli rotate-admin` — argon2 hash via the
+  same `passlib` path the auth uses; no shell-history leak.
+- Observability — Prometheus `/metrics` + structlog JSON +
+  request-id middleware (correlation through every log line).
+- Quality jobs in CI: pip-audit (advisory, deps-from-pyproject
+  pattern), jsx-a11y + vitest-axe (advisory), Playwright smoke
+  (advisory).
+- Fly.io single-container deploy artefacts (`infra/deploy/`).
+- mypy job in CI gating; pydantic.mypy plugin.
+- Production guard: backend refuses to start when `WAF_ENV=production`
+  and the seeded admin password is still the default `admin`.
+
+### Changed
+
+- Default access-token TTL: 60 min → 15 min (refresh handles re-auth).
+- README badges updated to v1.1.1; reflects current test count.
+- `.gitignore` extended for Playwright reports, Fly.io local state,
+  drift-report JSON snapshots, frontend coverage, alembic drafts.
+- `backend/src/waf_panel/db/models.py` — `__all__` moved to the end
+  of the file and includes `RefreshTokenFamily` so a future
+  `from .db.models import *` doesn't silently drop the new model.
+
+### Fixed
+
+- Refresh-rotation race: two concurrent /refresh calls with the same
+  presented generation could both succeed (non-atomic
+  SELECT-then-UPDATE). `bump_generation` now CAS-checks the expected
+  generation in the SQL UPDATE; the loser gets `None` and the auth
+  endpoint 401s with `family revoked mid-rotation`.
+
+(Future: real CSIC bench, mTLS between containers, multi-region
 IPSet sync, signed model artefacts, full ClickHouse migration runner)
 
 ## [1.1.1] — 2026-05-19

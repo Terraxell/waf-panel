@@ -1,8 +1,8 @@
 ﻿# waf-panel
 
 [![ci](https://github.com/Terraxell/waf-panel/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Terraxell/waf-panel/actions/workflows/ci.yml)
-[![release](https://img.shields.io/badge/release-v1.0.0-2A4DB8)](./CHANGELOG.md)
-[![tests](https://img.shields.io/badge/tests-163%20passing-2A4DB8)](./CHANGELOG.md)
+[![release](https://img.shields.io/badge/release-v1.1.1-2A4DB8)](./CHANGELOG.md)
+[![tests](https://img.shields.io/badge/tests-280%2B%20passing-2A4DB8)](./CHANGELOG.md)
 [![deploy](https://img.shields.io/badge/deploy-fly.io-7B3FE4)](./docs/deploy.md)
 
 Web Application Firewall management dashboard with an ML-based anomaly
@@ -14,10 +14,13 @@ Isolation Forest catches what the rules miss. One panel manages both.
 
 ## Status
 
-v1.0.0 ships everything from the 12-week roadmap. Ten services boot
-via `docker compose up -d`. ModSecurity blocks SQLi, XSS and RCE on
-the request path. Vector ships traffic events into ClickHouse. The
-dashboard, rule editor and audit log all work.
+v1.1.1 closes the 12-week course-project roadmap; the post-defence
+audit pass on `main` (tracked under [Unreleased] in `CHANGELOG.md`)
+adds production-grade auth, observability, and quality gates on top
+of the released baseline. Ten services boot via `docker compose up -d`.
+ModSecurity blocks SQLi, XSS and RCE on the request path. Vector
+ships traffic events into ClickHouse. The dashboard, rule editor,
+audit log, drift viewer and user-management page all work.
 
 The offline ML pipeline (`make train`) trains LR, XGBoost and
 IsolationForest on a stratified split with 5-fold CV, then registers
@@ -25,12 +28,15 @@ them into Postgres `ml_models`. Online inference runs in a separate
 `ml-service` container behind a fail-open backend proxy
 (`POST /api/v1/ml/inspect`, 20 ms p99 timeout).
 
-Later releases added drift detection (PSI + KS over all 25 features),
-per-prediction contributors (`POST /api/v1/ml/explain`), threshold
-calibration, opt-in block-mode via Lua subrequest
-(`PROXY_FLAVOR_DOCKERFILE=Dockerfile.openresty`), an attack-bench
-harness with 200 labelled probes, an opt-in AWS WAF IPSet adapter,
-the drift worker on a schedule, and a UI in RU / EN / DE / FR.
+Later iterations added drift detection (PSI + KS over all 25 features
+with quiet-window re-baselining), per-prediction contributors
+(`POST /api/v1/ml/explain`), threshold calibration, opt-in block-mode
+via Lua subrequest (`PROXY_FLAVOR_DOCKERFILE=Dockerfile.openresty`),
+an attack-bench harness with 200 labelled probes, an opt-in AWS WAF
+IPSet adapter, a UI in RU / EN / DE / FR, cookie + CSRF auth
+(ADR-0014), refresh-token rotation with replay detection (ADR-0015),
+Prometheus metrics, structlog JSON logging, a Playwright smoke
+suite, and a single-container Fly.io deploy path.
 
 Full history: `CHANGELOG.md`. Architecture deep-dive: [`docs/ARTICLE.md`](docs/ARTICLE.md).
 
@@ -191,6 +197,8 @@ Decisions are recorded in `docs/adr/`:
 - `0010-openresty-lua.md` — opt-in proxy flavour for Lua subrequest
 - `0011-block-mode.md` — threshold-driven block, three kill-switches
 - `0012-aws-waf-adapter.md` — optional one-way IPSet sync, fail-soft
+- `0014-cookie-auth-and-csrf.md` — httpOnly cookie + double-submit CSRF
+- `0015-refresh-token-rotation.md` — family-based replay detection, CAS-bumped generation
 
 ## Repository Layout
 

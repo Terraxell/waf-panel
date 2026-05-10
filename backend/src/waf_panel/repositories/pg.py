@@ -234,15 +234,32 @@ class PgRefreshFamiliesRepo:
         await self._s.refresh(row)
         return row
 
-    async def bump_generation(self, family_id: UUID) -> RefreshTokenFamily | None:
-        """Increment generation and stamp last_used_at. Returns the
-        post-update row, or None if the family was deleted between
-        decode and update (race with a concurrent revoke)."""
+    async def bump_generation(
+        self,
+        family_id: UUID,
+        *,
+        expected_generation: int,
+    ) -> RefreshTokenFamily | None:
+        """Increment generation and stamp last_used_at -- atomically.
+
+        WHY ``expected_generation`` (compare-and-swap): the /refresh
+        endpoint did SELECT-then-UPDATE non-atomically before, so two
+        concurrent refreshes with the same presented generation N both
+        passed evaluate_replay (read N == family N) and both bumped
+        the row -- the family ended at N+2 with two valid live tokens
+        (gen=N+1 and gen=N+2) until the older one was used and falsely
+        flagged as a replay. Adding `AND generation = :expected_gen`
+        to the WHERE clause closes the race: only one UPDATE can match,
+        the other returns no rows. The auth path treats None as a race
+        loss and 401s, which is the correct behaviour because the
+        client's token is already obsolete by then.
+        """
         stmt = (
             update(RefreshTokenFamily)
             .where(
                 RefreshTokenFamily.id == family_id,
                 RefreshTokenFamily.revoked_at.is_(None),
+                RefreshTokenFamily.generation == expected_generation,
             )
             .values(
                 generation=RefreshTokenFamily.generation + 1,

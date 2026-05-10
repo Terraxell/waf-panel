@@ -91,6 +91,21 @@ class Rule(Base):
 
 
 class MLModel(Base):
+    """Reserved for the future Postgres-backed model registry.
+
+    WHY this class exists despite no runtime reads: the table is in the
+    0001 schema baseline (already in every deployed database) and the
+    `incidents.model_id` FK depends on it. The current ML path reads
+    model metadata from the joblib registry under ``ml/models/active/``
+    and ``ml_service`` carries its own ``/healthz.model_loaded``
+    signal -- both bypass this table. A planned follow-up (ADR-0007
+    appendix) wires the Pg row in on every promote so the panel can
+    display "active model = vXXX" without scraping the filesystem.
+
+    Removing the class would orphan the FK from ``incidents`` and
+    require a migration that drops production tables; the carrying
+    cost is ~10 lines, so we keep the contract.
+    """
     __tablename__ = "ml_models"
 
     id: Mapped[UUID] = mapped_column(
@@ -106,6 +121,19 @@ class MLModel(Base):
 
 
 class Incident(Base):
+    """Reserved for the planned incident-detail endpoint.
+
+    WHY this class exists despite no runtime reads: the
+    ``GET /api/v1/incidents`` endpoint reads from ClickHouse
+    ``traffic_log`` (cheap, denormalised, OLAP-friendly). The
+    Postgres ``incidents`` table is the OLTP side -- a future
+    incident-detail view that needs full payload + ML-score
+    breakdown + per-incident actions (the audit C-list mentions
+    this) will INSERT here from the request path and SELECT here
+    from a detail endpoint. Removing the class today would orphan
+    the schema baseline already deployed, so we keep the ORM
+    contract aligned with the migration.
+    """
     __tablename__ = "incidents"
 
     id: Mapped[UUID] = mapped_column(
@@ -184,7 +212,6 @@ class MlConfig(Base):
     )
 
 
-__all__ = ["AuditLog", "Incident", "MLModel", "MlConfig", "Rule", "User"]
 
 
 class RefreshTokenFamily(Base):
@@ -215,3 +242,18 @@ class RefreshTokenFamily(Base):
     last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
+
+# WHY __all__ at the bottom: lets all classes (including
+# RefreshTokenFamily added in 0004) be in scope when the export list is
+# evaluated. Earlier the list lived above the new class, so a
+# `from .db.models import *` (none today, but a future ADR may want it)
+# would silently drop RefreshTokenFamily.
+__all__ = [
+    "AuditLog",
+    "Incident",
+    "MLModel",
+    "MlConfig",
+    "RefreshTokenFamily",
+    "Rule",
+    "User",
+]

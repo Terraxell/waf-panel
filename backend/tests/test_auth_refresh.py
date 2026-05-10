@@ -15,7 +15,10 @@ Five behaviours we lock down:
 
 from __future__ import annotations
 
-from waf_panel.repositories.deps import memory_audit_repo
+from waf_panel.repositories.deps import (
+    memory_audit_repo,
+    memory_refresh_families_repo,
+)
 
 
 def _login_full(client) -> dict[str, str]:
@@ -179,3 +182,43 @@ def test_login_uses_short_access_ttl(client) -> None:
     body = res.json()
     # 15 min × 60 s = 900 s. Default is access_ttl_minutes=15.
     assert body["expires_in"] == 900
+
+
+# ── 8. CAS race: two refreshes presenting the same gen ──────────────
+
+
+def test_concurrent_refresh_with_same_generation_only_one_wins(client) -> None:
+    """Race scenario: two browser tabs hit /auth/refresh at the same
+    time. Both decode the same refresh JWT (gen=0) and both pass the
+    replay check (family.generation == 0). The non-atomic version
+    would let both bumps succeed (gen=0→1→2, two valid live tokens).
+
+    Closing the SELECT-then-UPDATE race via CAS in the SQL UPDATE
+    means: the second call's UPDATE matches no row (generation is
+    already 1, not the expected 0) and the endpoint 401s. We can't
+    truly race two coroutines through one TestClient, but we can
+    simulate it: capture the gen=0 cookie, do one rotation, replay
+    the same gen=0 cookie -- the existing replay-detection branch
+    fires first, but if the timing were inverted (rotate hits the
+    DB after we've already SELECTed) the CAS fallback in
+    bump_generation is what saves us. This test locks the contract
+    that bump_generation accepts expected_generation kwarg.
+    """
+    _login_full(client)
+    repo = memory_refresh_families_repo()
+    assert repo is not None
+    # Pick the (one) family our login created.
+    fid, row = next(iter(repo._rows.items()))
+    assert row.generation == 0
+
+    # First bump: expected_generation=0 succeeds.
+    import asyncio
+    out_first = asyncio.run(repo.bump_generation(fid, expected_generation=0))
+    assert out_first is not None
+    assert out_first.generation == 1
+
+    # Second bump with the SAME expected_generation=0 must fail (CAS
+    # mismatch). This is the race-loser path the production SQL hits
+    # under real concurrency.
+    out_second = asyncio.run(repo.bump_generation(fid, expected_generation=0))
+    assert out_second is None

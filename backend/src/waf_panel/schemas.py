@@ -90,6 +90,14 @@ class RuleOut(RuleBase):
 
 
 # ── incidents ───────────────────────────────────────────────────────
+# WHY this schema exists despite no runtime serializer: the live
+# ``GET /api/v1/incidents`` endpoint serves ``IncidentRow`` (defined in
+# api/incidents.py) sourced from ClickHouse ``traffic_log``. ``IncidentOut``
+# below is the OLTP-side wire schema reserved for the planned
+# incident-detail endpoint -- one row, full payload, ML-score breakdown,
+# per-incident actions. Kept here so the `Incident` ORM model in
+# db/models.py has its public projection in one consistent place; a
+# future endpoint will use ``response_model=IncidentOut`` directly.
 
 
 class IncidentOut(BaseModel):

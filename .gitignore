@@ -48,6 +48,10 @@ redis-data/
 ml/models/
 ml/datasets/raw/
 ml/datasets/processed/
+# WHY ml/drift_reports/: written by drift_worker.py on every run;
+# JSON files keyed by UTC timestamp. Useful locally for triage but
+# never reviewed in PR — committing them would balloon the repo.
+ml/drift_reports/
 
 # --- build / generated ---
 build/
@@ -73,3 +77,37 @@ ml-service/waf_ml/
 # scratch error captures (never committed)
 ml/err.txt
 *.err.txt
+
+# --- e2e artefacts (Playwright) ---
+# WHY: `npx playwright test` writes html report + trace zips to these
+# folders. They're useful locally on a failed run, but absolutely
+# nobody wants megabytes of test traces in the repo. CI uploads them
+# as job artefacts in `dump logs on failure`, not via git.
+e2e/playwright-report/
+e2e/test-results/
+e2e/playwright/.cache/
+
+# --- bench artefacts ---
+# WHY: bench/reports/ holds sample + generated. The committed sample
+# (bench/reports/SAMPLE.md) is intentional; everything else is a
+# `<UTC>.json` snapshot of one run.
+bench/reports/*
+!bench/reports/SAMPLE.md
+
+# --- fly.io local state ---
+# WHY: `flyctl deploy` keeps a per-app cache in `.fly/`; secrets get
+# written to `.fly/secrets/`. Both are machine-local and would be a
+# secret leak if pushed.
+.fly/
+fly.toml.local
+
+# --- frontend coverage / typegen scratch ---
+# WHY: `vitest run --coverage` emits `coverage/`; OpenAPI typegen
+# emits a temp dir during regen. Neither is reproducible across
+# machines and both balloon diff noise.
+frontend/coverage/
+frontend/.openapi-tmp/
+
+# --- alembic local notes ---
+# WHY: scratch migration drafts before they get a real revision id.
+backend/alembic/versions/.draft/

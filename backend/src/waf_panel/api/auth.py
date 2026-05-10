@@ -209,10 +209,19 @@ async def refresh(
         )
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "refresh replay; family revoked")
 
-    # ROTATE -- bump generation atomically.
-    updated = await refresh_repo.bump_generation(claims.family_id)
+    # ROTATE -- bump generation atomically. The CAS check
+    # (generation = claims.generation) closes the SELECT-then-UPDATE
+    # race: two concurrent refreshes with the same presented gen N
+    # would each pass evaluate_replay (the read happens before either
+    # updates), but only one UPDATE can match `generation = N`. The
+    # other gets None and 401s -- correct behaviour because the
+    # client's token is already obsolete after the first update lands.
+    updated = await refresh_repo.bump_generation(
+        claims.family_id, expected_generation=claims.generation,
+    )
     if updated is None:
-        # Race: family was revoked between by_id() and bump_generation().
+        # Race: family was revoked, or another rotate beat us, between
+        # by_id() and bump_generation().
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "family revoked mid-rotation")
 
     user = await users.by_id(claims.user_id)

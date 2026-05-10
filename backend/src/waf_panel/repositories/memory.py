@@ -211,9 +211,22 @@ class InMemoryRefreshFamiliesRepo:
         self._rows[fid] = row
         return row
 
-    async def bump_generation(self, family_id: UUID) -> _RefreshFamilyRow | None:
+    async def bump_generation(
+        self,
+        family_id: UUID,
+        *,
+        expected_generation: int,
+    ) -> _RefreshFamilyRow | None:
+        # WHY: mirror PgRefreshFamiliesRepo's CAS contract so any
+        # service code calling .bump_generation() works against either
+        # backend without surprises. In-memory tests are single-task
+        # so no real race exists -- the check is here only for API
+        # parity, and a mismatched expected_generation returns None
+        # the same way the SQL UPDATE would.
         row = self._rows.get(family_id)
         if row is None or row.revoked_at is not None:
+            return None
+        if row.generation != expected_generation:
             return None
         row.generation += 1
         row.last_used_at = datetime.now(UTC)

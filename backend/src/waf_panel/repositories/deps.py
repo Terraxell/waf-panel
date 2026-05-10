@@ -72,6 +72,13 @@ def memory_ml_config_repo() -> InMemoryMlConfigRepo | None:
     return _mem_ml_config
 
 
+def memory_refresh_families_repo() -> InMemoryRefreshFamiliesRepo | None:
+    """Test helper: read the in-memory refresh-token-families repo
+    directly, so the rotation/CAS-race tests can introspect rows
+    without going through the FastAPI dependency graph."""
+    return _mem_refresh
+
+
 async def get_users_repo(session: SessionDep) -> Any:
     if _in_memory_active:
         assert _mem_users is not None
@@ -133,6 +140,7 @@ __all__ = [
     "is_in_memory_active",
     "memory_audit_repo",
     "memory_ml_config_repo",
+    "memory_refresh_families_repo",
     "reset_in_memory",
     "use_in_memory",
 ]
