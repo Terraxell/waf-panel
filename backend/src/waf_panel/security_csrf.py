@@ -89,7 +89,7 @@ class CsrfMiddleware(BaseHTTPMiddleware):
          risk. Downstream auth handles the 401.
     """
 
-    _CSRF_EXEMPT_PATHS = ("/api/v1/auth/login", "/api/v1/auth/logout")
+    _CSRF_EXEMPT_PATHS = ("/api/v1/auth/login", "/api/v1/auth/logout", "/api/v1/auth/refresh")
 
     async def dispatch(self, request: Request, call_next):
         if request.method in _SAFE_METHODS:
@@ -120,9 +120,54 @@ class CsrfMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
+
+def set_refresh_cookie(
+    response: Response,
+    *,
+    request: Request,
+    token: str,
+    ttl_seconds: int,
+) -> None:
+    """ADR-0015: plant the long-lived refresh JWT in a path-scoped
+    httpOnly cookie. Path = ``/api/v1/auth/`` so the browser only
+    sends it during rotation -- limits the blast radius of any
+    other handler that might reflect headers.
+    """
+    settings = get_settings()
+    secure = request.url.scheme == "https"
+    response.set_cookie(
+        key=settings.cookie_refresh_name,
+        value=token,
+        max_age=ttl_seconds,
+        httponly=True,
+        secure=secure,
+        samesite="strict",
+        path=settings.cookie_refresh_path,
+    )
+
+
+def clear_refresh_cookie(response: Response, *, request: Request) -> None:
+    """Tell the browser to delete the refresh cookie. Mirrors the
+    set_cookie call's path so the browser actually scrubs the right
+    entry from its jar."""
+    settings = get_settings()
+    secure = request.url.scheme == "https"
+    response.set_cookie(
+        key=settings.cookie_refresh_name,
+        value="",
+        max_age=0,
+        httponly=True,
+        secure=secure,
+        samesite="strict",
+        path=settings.cookie_refresh_path,
+    )
+
+
 __all__ = [
     "CsrfMiddleware",
+    "clear_refresh_cookie",
     "clear_session_cookies",
     "generate_csrf_token",
+    "set_refresh_cookie",
     "set_session_cookies",
 ]

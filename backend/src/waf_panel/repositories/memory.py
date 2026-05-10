@@ -188,10 +188,49 @@ class InMemoryMlConfigRepo:
         self._kv[key] = value
 
 
+@dataclass
+class _RefreshFamilyRow:
+    """In-memory mirror of RefreshTokenFamily ORM row."""
+    id: UUID
+    user_id: UUID
+    generation: int = 0
+    last_used_at: datetime | None = None
+    revoked_at: datetime | None = None
+
+
+class InMemoryRefreshFamiliesRepo:
+    def __init__(self) -> None:
+        self._rows: dict[UUID, _RefreshFamilyRow] = {}
+
+    async def by_id(self, family_id: UUID) -> _RefreshFamilyRow | None:
+        return self._rows.get(family_id)
+
+    async def create(self, *, user_id: UUID) -> _RefreshFamilyRow:
+        fid = uuid4()
+        row = _RefreshFamilyRow(id=fid, user_id=user_id, generation=0)
+        self._rows[fid] = row
+        return row
+
+    async def bump_generation(self, family_id: UUID) -> _RefreshFamilyRow | None:
+        row = self._rows.get(family_id)
+        if row is None or row.revoked_at is not None:
+            return None
+        row.generation += 1
+        row.last_used_at = datetime.now(UTC)
+        return row
+
+    async def revoke(self, family_id: UUID) -> None:
+        row = self._rows.get(family_id)
+        if row is not None:
+            row.revoked_at = datetime.now(UTC)
+
+
 __all__ = [
     "InMemoryAuditRepo",
     "InMemoryMlConfigRepo",
+    "InMemoryRefreshFamiliesRepo",
     "InMemoryRulesRepo",
     "InMemoryUsersRepo",
+    "_RefreshFamilyRow",
     "_UserRow",
 ]

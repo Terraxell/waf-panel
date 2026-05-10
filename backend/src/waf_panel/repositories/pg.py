@@ -15,7 +15,7 @@ from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..db.models import AuditLog, MlConfig, Rule, User
+from ..db.models import AuditLog, MlConfig, RefreshTokenFamily, Rule, User
 from ..schemas import RuleCreate, RuleOut, RuleUpdate
 
 UTC = timezone.utc
@@ -214,4 +214,51 @@ class PgMlConfigRepo:
         await self._s.commit()
 
 
-__all__ = ["PgAuditRepo", "PgMlConfigRepo", "PgRulesRepo", "PgUsersRepo"]
+class PgRefreshFamiliesRepo:
+    """ADR-0015: persists refresh-token family state for replay
+    detection. One row per active session; generation bumps on every
+    successful rotation; revoked_at stops the family from being
+    refreshed again."""
+
+    def __init__(self, session: AsyncSession) -> None:
+        self._s = session
+
+    async def by_id(self, family_id: UUID) -> RefreshTokenFamily | None:
+        stmt = select(RefreshTokenFamily).where(RefreshTokenFamily.id == family_id)
+        return (await self._s.execute(stmt)).scalar_one_or_none()
+
+    async def create(self, *, user_id: UUID) -> RefreshTokenFamily:
+        row = RefreshTokenFamily(user_id=user_id, generation=0)
+        self._s.add(row)
+        await self._s.flush()
+        await self._s.refresh(row)
+        return row
+
+    async def bump_generation(self, family_id: UUID) -> RefreshTokenFamily | None:
+        """Increment generation and stamp last_used_at. Returns the
+        post-update row, or None if the family was deleted between
+        decode and update (race with a concurrent revoke)."""
+        stmt = (
+            update(RefreshTokenFamily)
+            .where(
+                RefreshTokenFamily.id == family_id,
+                RefreshTokenFamily.revoked_at.is_(None),
+            )
+            .values(
+                generation=RefreshTokenFamily.generation + 1,
+                last_used_at=datetime.now(UTC),
+            )
+            .returning(RefreshTokenFamily)
+        )
+        return (await self._s.execute(stmt)).scalar_one_or_none()
+
+    async def revoke(self, family_id: UUID) -> None:
+        stmt = (
+            update(RefreshTokenFamily)
+            .where(RefreshTokenFamily.id == family_id)
+            .values(revoked_at=datetime.now(UTC))
+        )
+        await self._s.execute(stmt)
+
+
+__all__ = ["PgAuditRepo", "PgMlConfigRepo", "PgRefreshFamiliesRepo", "PgRulesRepo", "PgUsersRepo"]

@@ -40,7 +40,14 @@ class Settings(BaseSettings):
 
     # Auth
     jwt_secret: str = Field("dev-secret-do-not-use", min_length=8)
+    # WHY two TTLs: ADR-0015 splits access (short, refreshed silently
+    # via the rotation flow) from the user-facing session length. The
+    # legacy `jwt_ttl_minutes` is kept as the source-of-truth fallback
+    # for tests + any code path that still issues a single access token.
+    # `access_ttl_minutes` defaults to 15 (the rotation cadence); the
+    # refresh TTL lives in security_refresh.REFRESH_TTL_DAYS.
     jwt_ttl_minutes: int = 60
+    access_ttl_minutes: int = 15
     jwt_algorithm: str = "HS256"
 
     # Cookie auth (ADR-0014). Browser SPA uses cookies; CLI/CI keep
@@ -49,6 +56,11 @@ class Settings(BaseSettings):
     # can echo it in X-CSRF-Token. Double-submit equality is the check.
     cookie_session_name: str = "waf_session"
     cookie_csrf_name: str = "waf_csrf"
+    # ADR-0015: refresh cookie is httpOnly and path-scoped to the auth
+    # endpoints so the browser only sends it during rotation -- limits
+    # the blast radius of any other path that might reflect headers.
+    cookie_refresh_name: str = "waf_refresh"
+    cookie_refresh_path: str = "/api/v1/auth/"
 
     # ml-service
     ml_service_url: str = "http://ml-service:8001"

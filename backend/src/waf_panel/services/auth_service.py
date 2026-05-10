@@ -7,6 +7,7 @@ The HTTP layer stays a thin shell that maps service results to status codes.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from uuid import UUID
 
 from ..repositories.base import AuditRepo, UsersRepo
 from ..security import issue_access_token, verify_password
@@ -20,6 +21,12 @@ class AuthError(Exception):
 class TokenBundle:
     access_token: str
     expires_in: int
+    # ADR-0015: api/auth.py needs the user identity to spin up a
+    # refresh family right after AuthService.login returns OK. Adding
+    # the fields here saves one DB round-trip in the login handler.
+    user_id: UUID
+    role: str
+    email: str
 
 
 class AuthService:
@@ -57,7 +64,13 @@ class AuthService:
             role=user.role,
             email=user.email,
         )
-        return TokenBundle(access_token=token, expires_in=self._ttl_minutes * 60)
+        return TokenBundle(
+            access_token=token,
+            expires_in=self._ttl_minutes * 60,
+            user_id=user.id,
+            role=user.role,
+            email=user.email,
+        )
 
 
 __all__ = ["AuthError", "AuthService", "TokenBundle"]
